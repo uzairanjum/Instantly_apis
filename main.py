@@ -18,14 +18,13 @@ def incoming_sms(sms:dict):
 
 
 @app.post('/gepeto/case-webhook', tags=['Webhook'], summary="salesforce webhook")
-async def salesforce_webhook(request:Request):
+async def salesforce_webhook(request):
     try:
-        form_data = await request.form()
-        request = dict(form_data)
+
         print("------------webhook,",request)
         return JSONResponse(content={"status": "success"}, status_code=200)
     except Exception as e:
-        print("Exception occur in twilio webhook :: %s", e )
+        print("Exception occur in sales webhook :: %s", e )
 
 
     
