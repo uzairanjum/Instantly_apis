@@ -32,3 +32,23 @@ async def salesforce_webhook(request: Request):
     except Exception as e:
         print("Exception occurred in sales webhook:", e)
         return JSONResponse(content={"status": "error", "detail": str(e)}, status_code=500)
+
+@app.post('/gepeto/webflow', tags=['Webhook'], summary="web flow webhook")
+async def gepeto_webhook(request: Request):
+    try:
+        # Access the JSON payload
+        body = await request.json()
+        print("Received webhook payload:", body)
+
+
+
+        # Process the payload as needed
+        return JSONResponse(content={"status": "success"}, status_code=200)
+
+    except Exception as e:
+        print("Exception occurred in sales webhook:", e)
+        return JSONResponse(content={"status": "error", "detail": str(e)}, status_code=500)
+
+
+
+        {'caseOrigin': 'Email', 'contactEmail': 'robert@hellogepeto.com', 'caseStatus': 'New', 'caseNumber': '00001035', 'caseId': '500IR00001FcfGVYAZ', 'contactPhone': '16469802405'}
