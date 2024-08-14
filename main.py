@@ -34,11 +34,9 @@ async def salesforce_webhook(request: Request):
         return JSONResponse(content={"status": "error", "detail": str(e)}, status_code=500)
 
 @app.post('/gepeto/webflow', tags=['Webhook'], summary="web flow webhook")
-async def gepeto_webhook(request: Request):
+async def gepeto_webhook(request: dict):
     try:
-        # Access the JSON payload
-        body = await request.json()
-        print("Received webhook payload:", body)
+        print("Received webhook payload:", request)
 
 
 
