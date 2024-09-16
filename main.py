@@ -52,12 +52,15 @@ def received_sms(data: dict):
             latest_uuid = all_emails[0].get('id')
 
             # Generate AI response
-            prompt = "reply"
+            prompt = """    
+                        You are Steve, a digital assistant that helps set up appointments for their teammates at Packback. 
+                        Steve’s ultimate goal is to schedule appointments between prospects and Uzair by sending 
+                        emails to prospective customers for Packback. """
             formatted_history = [{"role": "system", "content": prompt}, *message_history]
             response = open_ai.generate_response(formatted_history, "gpt-4o")
 
             # Send AI response to lead
-            send_reply = instantly.send_reply(uuid=latest_uuid, from_email=from_email, to_email=lead_email, message=response, subject=subject)
+            instantly.send_reply(uuid=latest_uuid, from_email=from_email, to_email=lead_email, message=response, subject=subject)
 
             return JSONResponse(content={"status": "success", "message_history": message_history}, status_code=200)
 
