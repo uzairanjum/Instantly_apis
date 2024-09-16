@@ -25,7 +25,6 @@ class InstantlyAPI:
             "cc": "",
             "bcc": ""
         }
-        print("-------", data)
         try:
             response = requests.post(f'{self.url}/unibox/emails/reply?api_key={self.api_key}', json=data, headers=self.headers)
             return response.json() 
