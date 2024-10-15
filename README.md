@@ -36,6 +36,33 @@ Install the required dependencies by running:
 To start the application, use the following command:
 
 
+### Activate Environment
+Activate the virtual environment using the appropriate command for your operating system:
+
+- **Windows:**
+  ```bash
+  source ./.venv/Scripts/activate
+  ```
+
+- **macOS/Linux:**
+  ```bash
+  source ./.venv/bin/activate
+  ```
+
+
+
+### Install Dependencies
+Install the required dependencies by running:
+pip install -r requirements.txt
+
+
+
+### Start Application
+To start the application, use the following command:
+uvicorn main:app --port=8000 --reload
+
+
+
 ## Class Overview
 
 ### Responder Class
