@@ -5,3 +5,4 @@ supabase
 pydantic_settings
 requests
 APScheduler==3.10.4
+rq
