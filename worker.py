@@ -77,6 +77,7 @@ except Exception as e:
 if __name__ == "__main__":
     try:
         # get_lead_details()
+        logger.info("scheduler is running")
         scheduler.add_job(get_lead_details, 'interval', hours=3)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
@@ -86,3 +87,7 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
 
+
+# 
+
+# 
