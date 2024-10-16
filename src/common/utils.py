@@ -52,6 +52,8 @@ def format_email_history(all_emails: list):
                 content = ''
         
         message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content })
+    if not lead_reply:
+        first_reply_after = 0
     return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after
 
 def get_status(value):
