@@ -36,7 +36,7 @@ def get_lead_details():
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
 
-            if len(leads_array) >= 2000:
+            if len(leads_array) >= 3000:
                 break
             
             if len(all_leads) == 0: 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     try:
         # get_lead_details()
         logger.info("scheduler is running")
-        scheduler.add_job(get_lead_details, 'interval', hours=3)
+        scheduler.add_job(get_lead_details, 'interval', hours=1)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()
@@ -86,8 +86,3 @@ if __name__ == "__main__":
             pass
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
-
-
-# 
-
-# 

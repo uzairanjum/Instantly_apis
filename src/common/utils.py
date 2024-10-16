@@ -14,14 +14,18 @@ open_ai = OpenAiConfig(settings.OPENAI_API_KEY)
 logger = get_logger("Utils")
 
 
-def format_email_history(all_emails: dict):
+def format_email_history(all_emails: list):
+
     message_history: list = []
     lead_reply = False
     last_timestamp = None 
     from_account = None
     incoming_count = 0
     outgoing_count = 0
+    first_reply_after = 0
     lead_status = get_status(all_emails[0].get('i_status'))
+    all_emails.reverse() 
+    last_timestamp = all_emails[0].get('timestamp_created')
     for message in all_emails:
         if message['from_address_email'] == message['eaccount']:
             from_account = message['eaccount']
@@ -31,6 +35,10 @@ def format_email_history(all_emails: dict):
             lead_reply = True
             role = 'user'
             incoming_count += 1
+        
+        if not lead_reply:
+            first_reply_after = outgoing_count
+
         # Check for 'body.text' first, then use 'body.html' directly if 'text' is not found
         text_content = message.get('body', {}).get('text')
         if text_content:
@@ -43,10 +51,8 @@ def format_email_history(all_emails: dict):
             else:
                 content = ''
         
-        message_history.append({"role": role, "content": content, "timestamp": message.get('timestamp_created')})
-        last_timestamp = message.get('timestamp_created')
-    message_history.reverse()
-    return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status
+        message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content })
+    return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after
 
 def get_status(value):
     status_mapping = {
@@ -81,11 +87,11 @@ def get_lead_details_history(lead_email: str, university_name: str,campaign_id, 
     response = ''
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
-    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status= format_email_history(all_emails)
+    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after= format_email_history(all_emails)
     if lead_reply:
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
         response = open_ai.generate_response_using_tools(formatted_history)
     
-    data = {"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": json.dumps(message_history), "updated_at":timestamp, "campaign_id": campaign_id }
+    data = {"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after }
     return data
