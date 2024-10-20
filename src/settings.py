@@ -14,6 +14,9 @@ class CommonSettings(BaseSettings):
     REDIS_HOST: str = Field(..., env='REDIS_HOST')
     REDIS_PORT: str = Field(..., env='REDIS_PORT')
     REDIS_PASSWORD: str = Field(..., env='REDIS_PASSWORD')
+    GOOGLE_CREDENTIALS: str = Field(..., env='GOOGLE_CREDENTIALS')
+
+    
 
     class Config:
         env_file = ".env"

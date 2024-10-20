@@ -2,15 +2,23 @@
 
 import gspread
 from google.oauth2.service_account import Credentials
+from src.settings import settings
+
+import json
+import base64
+
+credentials_json = base64.b64decode(settings.GOOGLE_CREDENTIALS).decode('utf-8')
+credentials = json.loads(credentials_json)
+
 
 class GoogleSheetClient:
     def __init__(self):
-        self.service_account_file = 'gkey.json'
+        self.service_account_file = credentials
         self.client = self._authenticate()
 
     def _authenticate(self):
-        scopes = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive' ]
-        creds = Credentials.from_service_account_file(self.service_account_file, scopes=scopes)
+        scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        creds = Credentials.from_service_account_info(self.service_account_file, scopes=scopes)  # Changed this line
         return gspread.authorize(creds)
 
     def open_sheet(self, spreadsheet_name, worksheet_name):
