@@ -1,6 +1,7 @@
 from fastapi import APIRouter,Request
 from fastapi.responses import JSONResponse
 from src.common.logger import get_logger
+from src.common.utils import get_weekly_summary_report
 
 logger = get_logger("Api")
 
@@ -9,7 +10,9 @@ instantly_api_router = APIRouter()
 
 
 
-
+@instantly_api_router.get('/weekly-summary', tags=['API'])
+def weekly_summary(campaign_id: str, client_name: str):
+    return get_weekly_summary_report(campaign_id, client_name.lower())
 
 
 # @instantly_api_router.post('instantly/received', tags=['API'])

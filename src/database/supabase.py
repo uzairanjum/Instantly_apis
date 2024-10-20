@@ -32,7 +32,8 @@ class SupabaseClient():
         supabase_url: str= settings.SUPABASE_URL
         supabase_key: str = settings.SUPABASE_KEY
         self.max_retries = 3
-        self.table_name = "summary"
+        self.summary = "summary"
+        self.domain_health = "domain_health"
         self.db: Client = create_client(supabase_url , supabase_key)
 
     def __repr__(self) -> Client:
@@ -40,29 +41,46 @@ class SupabaseClient():
     
     @retry(max_attempts=5, delay=2)
     def insert(self, row: dict)-> Union[Dict, None]:
-        return self.db.table(self.table_name).insert([row]).execute()
+        return self.db.table(self.summary).insert([row]).execute()
     
     @retry(max_attempts=5, delay=2)
     def get(self, email: str)-> Union[Dict, None]:
-        return self.db.table(self.table_name).select("lead_email").eq('lead_email', email).execute()
+        return self.db.table(self.summary).select("lead_email").eq('lead_email', email).execute()
     
     # @retry(max_attempts=5, delay=2)
     # def get_all_false_flag(self)-> Union[Dict, None]:
-    #     return self.db.table(self.table_name).select("lead_email, campaign_id").eq('flag', False).execute()
+    #     return self.db.table(self.summary).select("lead_email, campaign_id").eq('flag', False).execute()
     
 
     @retry(max_attempts=5, delay=2)
     def get_all_false_flag(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
-        return self.db.table(self.table_name).select("lead_email, campaign_id").eq('flag', False).range(offset, offset + limit - 1).execute()
+        return self.db.table(self.summary).select("lead_email, campaign_id").eq('flag', False).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
+    
+    
+    @retry(max_attempts=5, delay=2)
+    def get_all_leads(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        return self.db.table(self.summary).select("lead_email, university_name, sent_date, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('flag', True).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
     
     @retry(max_attempts=5, delay=2)
     def update(self, row: dict, email: str)-> Union[Dict, None]:
-        return self.db.table(self.table_name).update(row).eq('lead_email', email).execute()
+        return self.db.table(self.summary).update(row).eq('lead_email', email).execute()
+    
+    @retry(max_attempts=5, delay=2)
+    def get_count(self, campaign_id: str) -> Union[Dict, None]:
+        return self.db.table(self.summary).select("campaign_id", count="exact").eq('campaign_id', campaign_id).eq('status', 'Interested').execute()
+    
+    @retry(max_attempts=5, delay=2)
+    def get_domain_health_count(self, client_name: str, start_of_week: str, end_of_week: str) -> Union[Dict, None]:
+        return self.db.table(self.domain_health).select("score", count="exact").gt('score', 8).eq('client_name', client_name).gt('updated_at', start_of_week).lt('updated_at', end_of_week).execute()
+    
+    @retry(max_attempts=5, delay=2)
+    def get_last_twenty_four_records(self, campaign_id: str, last_date: str, end_date: str,offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        return self.db.table(self.summary).select( "lead_email, university_name, sent_date, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).eq('flag', True).gte('updated_at', last_date).lte('updated_at', end_date).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
     
     @retry(max_attempts=5, delay=2)
     def insert_many(self, rows: list)-> Union[Dict, None]:
         try:
-            return self.db.table(self.table_name).insert(rows).execute()
+            return self.db.table(self.summary).insert(rows).execute()
         except Exception as e:
             logger.error(f"Error inserting many rows: {e}")
             return None

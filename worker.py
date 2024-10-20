@@ -9,6 +9,8 @@ from src.database.redis import RedisConfig
 import concurrent.futures
 from rq import Queue, Worker
 
+from src.common.utils import update_daily_summary_report, append_weekly_summary_report
+
 
 
 db = SupabaseClient()
@@ -36,7 +38,7 @@ def get_lead_details():
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
 
-            if len(leads_array) >= 2000:
+            if len(leads_array) >= 1000:
                 break
             
             if len(all_leads) == 0: 
@@ -69,6 +71,8 @@ def get_lead_details():
 
 try:
     scheduler = BackgroundScheduler()
+    cron_trigger_at_11pm = CronTrigger( hour=23, minute=0, second=0, day_of_week="tue", timezone=ct_timezone)
+    
 except Exception as e:
     logger.error(f"Error: {e}")
 
@@ -76,10 +80,10 @@ except Exception as e:
 
 if __name__ == "__main__":
     try:
-        # get_lead_details()
         logger.info("scheduler is running")
-        # scheduler.add_job(get_lead_details, 'interval', hours=1)
-        scheduler.add_job(get_lead_details, 'interval', minutes=30)
+        scheduler.add_job(get_lead_details, 'interval', hours=2)
+        scheduler.add_job(update_daily_summary_report, 'interval', hours=4)
+        scheduler.add_job(append_weekly_summary_report,cron_trigger_at_11pm)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()

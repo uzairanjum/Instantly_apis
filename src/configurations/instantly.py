@@ -1,5 +1,7 @@
 import requests
 from src.common.logger import get_logger
+from typing import Union
+from src.common.models import CampaignSummary
 
 logger = get_logger("Instantly")
 
@@ -105,7 +107,7 @@ class InstantlyAPI:
             logger.error(f"An error occurred: {e}")
             return None
 
-    def get_campaign_details(self, **kwargs):
+    def get_campaign_details(self, **kwargs) -> Union[CampaignSummary, None]:
         campaign_id = kwargs.get('campaign_id')
         url = f"https://api.instantly.ai/api/v1/analytics/campaign/summary?api_key={self.api_key}&campaign_id={campaign_id}"
 
@@ -113,7 +115,7 @@ class InstantlyAPI:
         try:
             response = requests.get(url, headers=self.headers)
             if response.status_code == 200:
-                return response.json()  # Return the response in JSON format
+                return CampaignSummary(**response.json())  # Return the response in JSON format
             else:
                 return None
         except requests.exceptions.RequestException as e:
