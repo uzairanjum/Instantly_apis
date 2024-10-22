@@ -24,7 +24,7 @@ def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
         return None, None, None
     organization_details = campaign_details.data[0].get("organizations")
     organization_name = organization_details.get('name')
-    zapier_url = organization_details.get('url')
+    zapier_url = organization_details.get('zapier_url')
     instantly_api_key = organization_details.get('api_key')
     return organization_name, instantly_api_key, zapier_url
 
