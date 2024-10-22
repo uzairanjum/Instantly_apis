@@ -11,6 +11,17 @@ class CampaignSummary(BaseModel):
     leads_who_replied: int
 
 
+class TimeFrameCampaignData(BaseModel):
+    emails_sent: int
+    emails_read: int
+    new_leads_contacted: int
+    leads_replied: int
+    leads_read: int
+    campaign_id: str
+    campaign_name: str
+
+
+
 class WeeklyCampaignSummary(BaseModel):
     week: str
     total_leads: int

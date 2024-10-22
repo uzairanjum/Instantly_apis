@@ -18,19 +18,18 @@ def incoming_sms(data:dict):
     try:
         if data.get('event_type') == "reply_received":
             logger.info("Incoming webhook  - %s - %s", data.get('lead_email'), data.get('campaign_id'))
-            instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'))
-            # return get_data_from_instantly(data.get('lead_email'), data.get('campaign_id'))
+            instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'), 'reply_received')
+            # return get_data_from_instantly(data.get('lead_email'), data.get('campaign_id'),'reply_received')
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
-
 
 @instantly_webhook_router.post('/outgoing')
 def outgoing_sms(data:dict):
     try:    
         if data.get('event_type') == "email_sent":
             logger.info("Outgoing webhook  - %s - %s", data.get('lead_email'), data.get('campaign_id'))
-            instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'))
-            # return get_data_from_instantly(data.get('lead_email'), data.get('campaign_id'))
+            instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'),'email_sent')
+            # return get_data_from_instantly(data.get('lead_email'), data.get('campaign_id'),'email_sent')
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
 

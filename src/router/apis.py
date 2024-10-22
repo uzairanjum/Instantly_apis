@@ -10,7 +10,7 @@ instantly_api_router = APIRouter()
 
 
 
-@instantly_api_router.get('/weekly-summary', tags=['API'])
+@instantly_api_router.get('/weekly-summary')
 def weekly_summary(campaign_id: str, client_name: str):
     return get_weekly_summary_report(campaign_id, client_name.lower())
 

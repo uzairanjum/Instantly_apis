@@ -1,5 +1,4 @@
 from src.configurations.instantly import InstantlyAPI
-import json
 from src.configurations.llm import OpenAiConfig
 from datetime import datetime, timedelta
 from src.settings import settings
@@ -12,12 +11,30 @@ from src.configurations.googleSheet import GoogleSheetClient
 import pandas as pd
 
 
-instantly = InstantlyAPI(api_key=settings.INSTANTLY_API_KEY)
+
 open_ai = OpenAiConfig(settings.OPENAI_API_KEY)
 db = SupabaseClient()
 gs_client = GoogleSheetClient()
 logger = get_logger("Utils")
 
+
+def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
+    campaign_details = db.get_campaign_details(campaign_id)
+    if campaign_details is None:
+        return None, None, None
+    organization_details = campaign_details.data[0].get("organizations")
+    organization_name = organization_details.get('name')
+    zapier_url = organization_details.get('url')
+    instantly_api_key = organization_details.get('api_key')
+    return organization_name, instantly_api_key, zapier_url
+
+def get_csv_details(campaign_id:str, summary_type:str) -> Union[tuple[str, str], None]:
+    csv_details = db.get_csv_detail(campaign_id, summary_type)
+    if csv_details is None:
+        return None, None
+    csv_name = csv_details.data[0].get('csv_name')
+    worksheet_name = csv_details.data[0].get('worksheet_name')
+    return csv_name, worksheet_name
 
 def format_email_history(all_emails: list):
 
@@ -75,21 +92,6 @@ def get_status(value):
     }
     return status_mapping.get(value, "Lead")
 
-def get_lead_details_history_for_csv(lead_email: str, university_name: str, campaign_id: str, index: int):
-    response = ''
-    logger.info(f"Processing lead - {index + 1} - {lead_email}")
-    all_emails = instantly.get_all_emails(lead=lead_email, campaign_id=campaign_id)
-    if not all_emails:
-        return None
-    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status= format_email_history(all_emails)
-    if lead_reply:
-        ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
-        formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
-        response = open_ai.generate_response_using_tools(formatted_history)
-    timestamp = datetime.now().isoformat()
-    data = {"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": json.dumps(message_history), "updated_at":timestamp }
-    return data
-
 def get_lead_details_history(lead_email: str, university_name: str,campaign_id,  all_emails: list):
     response = ''
     logger.info(f"Processing lead - {lead_email}")
@@ -99,45 +101,53 @@ def get_lead_details_history(lead_email: str, university_name: str,campaign_id, 
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
         response = open_ai.generate_response_using_tools(formatted_history)
-    
-    data = {"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" }
+    last_timestamp = message_history[-1].get('timestamp')
+    data = {"last_contact": last_timestamp,"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" }
     return data
 
-
-
-
 def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[WeeklyCampaignSummary, None]:
+    _, instantly_api_key, _ = get_campaign_details(campaign_id)
+    if not instantly_api_key:
+        return None
+    instantly = InstantlyAPI(instantly_api_key)
     response = instantly.get_campaign_details(campaign_id=campaign_id)
     if not response:
         return None
-    positive_reply = db.get_count(campaign_id).count
-    start_of_week, end_of_week = get_last_week_start_and_end_of_week()
-    print("start", start_of_week, end_of_week)
-    domain_health_count = db.get_domain_health_count(client_name,start_of_week, end_of_week).count
-    domain_health = f"{domain_health_count}/252"
-    week  = get_week_start_and_end_of_week()
-    response = WeeklyCampaignSummary(**response.dict(), positive_reply=positive_reply, domain_health=domain_health, week = week)
-    print("=res", response)
+    start_of_week, end_of_week  = get_last_week_start_and_end_of_week()
+    positive_reply = db.get_count(campaign_id, start_of_week, end_of_week).count
+    domain_health = get_domain_health_count(client_name)
+    start_of_week = start_of_week.date().strftime("%m/%d/%Y")
+    end_of_week = end_of_week.date().strftime("%m/%d/%Y")
+    weekly_response = instantly.get_weekly_campaign_details(campaign_id=campaign_id, start_date=start_of_week, end_date=end_of_week)
+    week  = start_of_week + " - " + end_of_week
+    response = WeeklyCampaignSummary(total_leads=response.total_leads,
+                                     not_yet_contacted=response.not_yet_contacted,
+                                     contacted=weekly_response.new_leads_contacted,
+                                     leads_who_replied=weekly_response.leads_replied,
+                                     positive_reply=positive_reply, 
+                                     domain_health=domain_health, 
+                                     week = week)
     return response
 
+def get_domain_health_count(client_name: str):
+    start_of_week, end_of_week  = get_last_week_start_and_end_of_week()
+    domain_health_count = db.get_domain_health_count(client_name,start_of_week, end_of_week).count
+    domain_health = f"{domain_health_count}/252"
+    return domain_health
+
+# def get_last_week_start_and_end_of_week():
+#     today = datetime.now()
+#     start_of_week = today - timedelta(days=today.weekday() + 7)
+#     end_of_week = start_of_week + timedelta(days=6)
+#     return  start_of_week , end_of_week
 
 def get_last_week_start_and_end_of_week():
     today = datetime.now()
-    # Calculate start of the previous week (Monday)
-    start_of_last_week = today - timedelta(days=today.weekday() + 7)
-    # Calculate end of the previous week (Sunday)
-    end_of_last_week = start_of_last_week + timedelta(days=6)
-    return start_of_last_week.date(), end_of_last_week.date()
-
-
-def get_week_start_and_end_of_week():
-    today = datetime.now()
-    # Calculate start of the previous week (Monday)
-    start_of_week = today - timedelta(days=today.weekday())
-    # Calculate end of the previous week (Sunday)
-    end_of_week = start_of_week + timedelta(days=6)
-    week  = start_of_week.date().strftime("%m/%d/%Y") + " - " + end_of_week.date().strftime("%m/%d/%Y")
-    return week
+    # Shift the weekday calculation to make Wednesday the start of the week
+    days_since_wednesday = (today.weekday() - 2) % 7  # 2 corresponds to Wednesday
+    start_of_week = today - timedelta(days=days_since_wednesday + 7)  # Go back to the previous Wednesday
+    end_of_week = start_of_week + timedelta(days=6)  # End of the week is Tuesday
+    return start_of_week, end_of_week
 
 
 def get_daily_summary_report(campaign_id: str):
@@ -156,30 +166,28 @@ def get_daily_summary_report(campaign_id: str):
 
 def last_24_hours_time():
     today = datetime.now()
-    if today.weekday() == 0:  # Monday
-        # If today is Monday, set the start to Friday
-        start_time = today - timedelta(days=3)  # Go back to Friday
-    elif today.weekday() == 5:  # Saturday
-        start_time = today - timedelta(days=1)  # Go back to Friday
-    elif today.weekday() == 6:  # Sunday
-        start_time = today - timedelta(days=2)  # Go back to Friday
+    if today.weekday() == 0: 
+        start_time = today - timedelta(days=3) 
+    elif today.weekday() == 5: 
+        start_time = today - timedelta(days=1) 
+    elif today.weekday() == 6:  
+        start_time = today - timedelta(days=2)  
     else:
-        start_time = today - timedelta(days=1)  # Normal case for other weekdays
+        start_time = today - timedelta(days=1)  
     return today, start_time
 
-
-def append_weekly_summary_report():
-    worksheet = gs_client.open_sheet("Packback Summary", "weekly")
-    data = get_weekly_summary_report("ecdc673c-3d90-4427-a556-d39c8b69ae9f", "packback")
+def update_weekly_summary_report(campaign_id: str, organization_name: str, csv_name: str, worksheet_name: str):
+    worksheet = gs_client.open_sheet(csv_name, worksheet_name)
+    data = get_weekly_summary_report(campaign_id, organization_name)
 
     new_row = [
-        f"{data.week}",  
-        f"{data.total_leads}",                
-        f"{data.contacted}",         
-        f"{data.leads_who_replied}",              
-        f"{data.positive_reply}",           
-        f"{data.not_yet_contacted}",          
-        f"{data.domain_health}"               
+        data.week,  
+        data.total_leads,                
+        data.contacted,         
+        data.leads_who_replied,              
+        data.positive_reply,           
+        data.not_yet_contacted,          
+        data.domain_health              
     ]
     logger.info("Weekly report data %s", new_row)
 
@@ -188,9 +196,8 @@ def append_weekly_summary_report():
     except Exception as e:
         logger.error(f"Error appending row: {e}")
 
-def update_daily_summary_report():
+def update_daily_summary_report(campaign_id: str, organization_name: str, csv_name: str, worksheet_name: str):
     today, start_time = last_24_hours_time()
-    campaign_id = "ecdc673c-3d90-4427-a556-d39c8b69ae9f"
     offset = 0  
     limit = 800
     leads_array = []   
@@ -200,7 +207,7 @@ def update_daily_summary_report():
         if len(all_leads) == 0: 
             break
 
-        worksheet = gs_client.open_sheet("Packback Summary", "daily")
+        worksheet = gs_client.open_sheet(csv_name, worksheet_name)
         all_csv_records = gs_client.get_all_records(worksheet)
         dataframe = pd.DataFrame(all_csv_records)
       
@@ -213,8 +220,8 @@ def update_daily_summary_report():
 
             if email_exists:
                 logger.info(f"Email exists")
-                columns = ["Email", "School Name", "Sent Date","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
-                values = [ lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
+                columns = ["Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
+                values = [ lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
                 dataframe.loc[dataframe['Email'] == email_to_check, columns] = values  # Increment outgoing count
             else:
                 logger.info(f"Email not exists")
@@ -223,6 +230,7 @@ def update_daily_summary_report():
                     "Email" :lead.get('lead_email'),
                     "School Name": lead.get('university_name'),
                     "Sent Date":lead.get('sent_date'),
+                    "Last Contact":lead.get('last_contact'),
                     "Outgoing":lead.get('outgoing'),
                     "Incoming":lead.get('incoming'),
                     "Reply":lead.get('reply'),

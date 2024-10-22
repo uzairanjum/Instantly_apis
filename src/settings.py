@@ -10,7 +10,6 @@ class CommonSettings(BaseSettings):
     SUPABASE_URL: str = Field(..., env='SUPABASE_URL')
     SUPABASE_KEY: str = Field(..., env='SUPABASE_KEY')
     OPENAI_API_KEY: str = Field(..., env='OPENAI_API_KEY')
-    INSTANTLY_API_KEY: str = Field(..., env='INSTANTLY_API_KEY')
     REDIS_HOST: str = Field(..., env='REDIS_HOST')
     REDIS_PORT: str = Field(..., env='REDIS_PORT')
     REDIS_PASSWORD: str = Field(..., env='REDIS_PASSWORD')

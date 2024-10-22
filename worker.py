@@ -9,7 +9,9 @@ from src.database.redis import RedisConfig
 import concurrent.futures
 from rq import Queue, Worker
 
-from src.common.utils import update_daily_summary_report, append_weekly_summary_report
+from src.core.summary import Summary
+
+
 
 
 
@@ -28,7 +30,7 @@ instantly_queue = Queue("instantly_queue", connection=redis_config.redis)
 ##################################################################
 
 
-def get_lead_details():
+def update_lead_details():
     try:
         logger.info("scheduler is running")
         offset = 0  
@@ -49,7 +51,7 @@ def get_lead_details():
             offset += limit 
         logger.info("leads_array %s", len(leads_array))
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(get_data_from_instantly, row.get("lead_email", None), row.get("campaign_id", None), index + 1, True): row for index,row in enumerate(leads_array)}
+            futures = {executor.submit(get_data_from_instantly, row.get("lead_email", None), row.get("campaign_id", None),'cron', index + 1, True): row for index,row in enumerate(leads_array)}
             for index, future in enumerate(concurrent.futures.as_completed(futures)):
                 try:
                     if (index + 1) % 10 == 0:  # After every 10 requests
@@ -64,6 +66,24 @@ def get_lead_details():
         logger.exception("Exception occurred get_lead_details %s", e)
 
 
+
+
+def update_daily_summary_report():
+    try:
+        logger.info("update_daily_summary_report is running")
+        summary = Summary(campaign_id="ecdc673c-3d90-4427-a556-d39c8b69ae9f")
+        summary.update_daily_summary()
+    except Exception as e:
+        logger.exception("Exception occurred update_daily_summary_report %s", e)
+
+
+def update_weekly_summary_report():
+    try:
+        logger.info("update_weekly_summary_report is running")
+        summary = Summary(campaign_id="ecdc673c-3d90-4427-a556-d39c8b69ae9f")
+        summary.update_weekly_summary()
+    except Exception as e:
+        logger.exception("Exception occurred update_weekly_summary_report %s", e)
 
 ##################################################################
 ##### scheduler for  initial_message/follow_up/send_summary  #####
@@ -81,9 +101,9 @@ except Exception as e:
 if __name__ == "__main__":
     try:
         logger.info("scheduler is running")
-        scheduler.add_job(get_lead_details, 'interval', hours=2)
-        scheduler.add_job(update_daily_summary_report, 'interval', hours=4)
-        scheduler.add_job(append_weekly_summary_report,cron_trigger_at_11pm)
+        scheduler.add_job(update_lead_details, 'interval', hours=3)
+        scheduler.add_job(update_daily_summary_report, 'interval', hours=6)
+        scheduler.add_job(update_weekly_summary_report,cron_trigger_at_11pm)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()
@@ -91,3 +111,4 @@ if __name__ == "__main__":
             pass
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
+# 

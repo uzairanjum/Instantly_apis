@@ -1,7 +1,7 @@
 import requests
 from src.common.logger import get_logger
 from typing import Union
-from src.common.models import CampaignSummary
+from src.common.models import CampaignSummary, TimeFrameCampaignData
 
 logger = get_logger("Instantly")
 
@@ -109,7 +109,7 @@ class InstantlyAPI:
 
     def get_campaign_details(self, **kwargs) -> Union[CampaignSummary, None]:
         campaign_id = kwargs.get('campaign_id')
-        url = f"https://api.instantly.ai/api/v1/analytics/campaign/summary?api_key={self.api_key}&campaign_id={campaign_id}"
+        url = f"{self.url}/analytics/campaign/summary?api_key={self.api_key}&campaign_id={campaign_id}"
 
 
         try:
@@ -123,3 +123,19 @@ class InstantlyAPI:
             return None
 
         
+    def get_weekly_campaign_details(self, **kwargs) -> Union[TimeFrameCampaignData, None]:
+        campaign_id = kwargs.get('campaign_id')
+        start_date = kwargs.get('start_date')
+        end_date = kwargs.get('end_date')
+        url = f"{self.url}/analytics/campaign/count?api_key={self.api_key}&campaign_id={campaign_id}&start_date={start_date}&end_date={end_date}"
+
+     
+        try:
+            response = requests.get(url, headers=self.headers)
+            if response.status_code == 200:
+                return TimeFrameCampaignData(**response.json()[0]) # Return the response in JSON format
+            else:
+                return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"An error occurred: {e}")
+            return None

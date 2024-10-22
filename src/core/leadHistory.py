@@ -1,28 +1,30 @@
 from src.configurations.instantly import InstantlyAPI
 from src.settings import settings
 from src.database.supabase import SupabaseClient
-from src.common.utils import get_lead_details_history
+from src.common.utils import get_lead_details_history, get_campaign_details
 from src.common.logger import get_logger
+from src.common.integration import Integration
 
 
-instantly = InstantlyAPI(api_key=settings.INSTANTLY_API_KEY)
+
 db = SupabaseClient()
 logger = get_logger("LeadHistory")
 
 class LeadHistory:
-    def __init__(self, lead_email, campaign_id):
+    def __init__(self, lead_email, campaign_id, instantly_api_key):
         self.lead_email = lead_email
         self.campaign_id = campaign_id
+        self.instantly = InstantlyAPI(instantly_api_key)
 
     def get_lead_details(self):
-        lead_details = instantly.get_lead_details(lead = self.lead_email, campaign_id = self.campaign_id)
+        lead_details = self.instantly.get_lead_details(lead = self.lead_email, campaign_id = self.campaign_id)
         if lead_details:
             lead_details = lead_details[0].get('lead_data')
             return {"email" : lead_details.get('email'), "University Name" : lead_details.get('University Name')}
         return lead_details
 
     def get_lead_emails(self):
-        all_emails = instantly.get_all_emails(lead=self.lead_email, campaign_id=self.campaign_id)
+        all_emails = self.instantly.get_all_emails(lead=self.lead_email, campaign_id=self.campaign_id)
         if not all_emails:
             return None 
         return all_emails
@@ -41,8 +43,14 @@ class LeadHistory:
     
     
 
-def get_data_from_instantly(lead_email, campaign_id, index = 1 , flag = False):
-    instantly_lead = LeadHistory(lead_email, campaign_id)
+def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = False):
+
+
+    organization_name, instantly_api_key, zapier_url = get_campaign_details(campaign_id)
+    if organization_name is None:
+        return None
+    instantly_lead = LeadHistory(lead_email, campaign_id, instantly_api_key)
+
 
     # Get lead details from instantly
     lead_history = instantly_lead.get_lead_details()
@@ -65,5 +73,12 @@ def get_data_from_instantly(lead_email, campaign_id, index = 1 , flag = False):
     # Save lead history to supabase
     instantly_lead.save_lead_history(data)
     logger.info("lead email processed - %s :: %s", index, lead_email)
+
+    if event =='reply_received' and zapier_url.startswith("https"):
+        logger.info("reply received - %s", lead_email)
+        Integration(url=zapier_url, data={"organization_id":organization_name, "direction":"incoming", "email":lead_email, "campaign_id":campaign_id, "ConversationUrl":data['url']}).post()
+        logger.info("Send to slack - %s", lead_email)
+
     return data
+
 
