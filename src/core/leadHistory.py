@@ -3,9 +3,9 @@ from src.settings import settings
 from src.database.supabase import SupabaseClient
 from src.common.utils import get_lead_details_history, get_campaign_details
 from src.common.logger import get_logger
-from src.common.integration import Integration
+from src.configurations.justcall import JustCallService
 
-
+jc = JustCallService()
 
 db = SupabaseClient()
 logger = get_logger("LeadHistory")
@@ -73,11 +73,10 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
     # Save lead history to supabase
     instantly_lead.save_lead_history(data)
     logger.info("lead email processed - %s :: %s", index, lead_email)
-    print("zapier_url",zapier_url)
-    if event =='reply_received' and zapier_url and zapier_url.startswith("https"):
+
+    if event =='reply_received' and data.get('status') == "Interested":
         logger.info("reply received - %s", lead_email)
-        Integration(url=zapier_url, data={"organization_id":organization_name, "direction":"incoming", "email":lead_email, "campaign_name":campaign_name, "ConversationUrl":data['url']}).post()
-        logger.info("Send to slack - %s", lead_email)
+        jc.send_message(f"New interested lead -\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
 
     return data
 

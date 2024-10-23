@@ -14,6 +14,8 @@ class CommonSettings(BaseSettings):
     REDIS_PORT: str = Field(..., env='REDIS_PORT')
     REDIS_PASSWORD: str = Field(..., env='REDIS_PASSWORD')
     GOOGLE_CREDENTIALS: str = Field(..., env='GOOGLE_CREDENTIALS')
+    JUSTCALL_API_KEY: str = Field(..., env='JUSTCALL_API_KEY')
+    JUSTCALL_API_SECRET: str = Field(..., env='JUSTCALL_API_SECRET')
 
     
 
