@@ -133,7 +133,10 @@ class InstantlyAPI:
         try:
             response = requests.get(url, headers=self.headers)
             if response.status_code == 200:
-                return TimeFrameCampaignData(**response.json()[0]) # Return the response in JSON format
+                if len(response.json()) > 0:
+                    return TimeFrameCampaignData(**response.json()[0]) # Return the response in JSON format
+                else:
+                    return None
             else:
                 return None
         except requests.exceptions.RequestException as e:

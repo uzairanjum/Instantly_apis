@@ -53,9 +53,13 @@ class SupabaseClient():
     @retry(max_attempts=5, delay=2)
     def get_campaign_details(self, campaign_id: str)-> Union[Dict, None]:
         return self.db.table(self.campaigns) \
-            .select("campaign_id, organizations(name, api_key, zapier_url)") \
+            .select("campaign_id, campaign_name, organizations(name, api_key, zapier_url)") \
             .eq('campaign_id', campaign_id) \
             .execute()
+    
+    @retry(max_attempts=5, delay=2)
+    def get_all_campaigns(self)-> Union[Dict, None]:
+        return self.db.table(self.campaigns).select("campaign_id, campaign_name").eq('active', True).execute()
     
     @retry(max_attempts=5, delay=2)
     def get_csv_detail(self, campaign_id: str, summary_type: SummaryType)-> Union[Dict, None]:

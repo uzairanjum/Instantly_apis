@@ -22,11 +22,12 @@ def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
     campaign_details = db.get_campaign_details(campaign_id)
     if campaign_details is None:
         return None, None, None
+    campaign_name = campaign_details.data[0].get("campaign_name")
     organization_details = campaign_details.data[0].get("organizations")
     organization_name = organization_details.get('name')
     zapier_url = organization_details.get('zapier_url')
     instantly_api_key = organization_details.get('api_key')
-    return organization_name, instantly_api_key, zapier_url
+    return campaign_name, organization_name, instantly_api_key, zapier_url
 
 def get_csv_details(campaign_id:str, summary_type:str) -> Union[tuple[str, str], None]:
     csv_details = db.get_csv_detail(campaign_id, summary_type)
@@ -106,7 +107,7 @@ def get_lead_details_history(lead_email: str, university_name: str,campaign_id, 
     return data
 
 def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[WeeklyCampaignSummary, None]:
-    _, instantly_api_key, _ = get_campaign_details(campaign_id)
+    _, _, instantly_api_key, _ = get_campaign_details(campaign_id)
     if not instantly_api_key:
         return None
     instantly = InstantlyAPI(instantly_api_key)
@@ -119,6 +120,8 @@ def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[Weekl
     start_of_week = start_of_week.date().strftime("%m/%d/%Y")
     end_of_week = end_of_week.date().strftime("%m/%d/%Y")
     weekly_response = instantly.get_weekly_campaign_details(campaign_id=campaign_id, start_date=start_of_week, end_date=end_of_week)
+    if not weekly_response:
+        return None
     week  = start_of_week + " - " + end_of_week
     response = WeeklyCampaignSummary(total_leads=response.total_leads,
                                      not_yet_contacted=response.not_yet_contacted,
@@ -176,18 +179,22 @@ def last_24_hours_time():
         start_time = today - timedelta(days=1)  
     return today, start_time
 
-def update_weekly_summary_report(campaign_id: str, organization_name: str, csv_name: str, worksheet_name: str):
+def update_weekly_summary_report(campaign_id: str, campaign_name: str, organization_name: str, csv_name: str, worksheet_name: str):
     worksheet = gs_client.open_sheet(csv_name, worksheet_name)
     data = get_weekly_summary_report(campaign_id, organization_name)
+    if data is None:
+        return []
 
     new_row = [
+        campaign_name,
         data.week,  
         data.total_leads,                
         data.contacted,         
         data.leads_who_replied,              
         data.positive_reply,           
         data.not_yet_contacted,          
-        data.domain_health              
+        data.domain_health,              
+        
     ]
     logger.info("Weekly report data %s", new_row)
 
@@ -196,7 +203,7 @@ def update_weekly_summary_report(campaign_id: str, organization_name: str, csv_n
     except Exception as e:
         logger.error(f"Error appending row: {e}")
 
-def update_daily_summary_report(campaign_id: str, organization_name: str, csv_name: str, worksheet_name: str):
+def update_daily_summary_report(campaign_id: str, campaign_name: str, organization_name: str, csv_name: str, worksheet_name: str):
     today, start_time = last_24_hours_time()
     offset = 0  
     limit = 800
@@ -220,13 +227,14 @@ def update_daily_summary_report(campaign_id: str, organization_name: str, csv_na
 
             if email_exists:
                 logger.info(f"Email exists")
-                columns = ["Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
-                values = [ lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
+                columns = ["Campaign Name", "Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
+                values = [campaign_name, lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
                 dataframe.loc[dataframe['Email'] == email_to_check, columns] = values  # Increment outgoing count
             else:
                 logger.info(f"Email not exists")
                 # Append a new row if the email does not exist
                 data = { 
+                    "Campaign Name": campaign_name,
                     "Email" :lead.get('lead_email'),
                     "School Name": lead.get('university_name'),
                     "Sent Date":lead.get('sent_date'),

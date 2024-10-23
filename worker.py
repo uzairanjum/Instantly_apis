@@ -54,8 +54,8 @@ def update_lead_details():
             futures = {executor.submit(get_data_from_instantly, row.get("lead_email", None), row.get("campaign_id", None),'cron', index + 1, True): row for index,row in enumerate(leads_array)}
             for index, future in enumerate(concurrent.futures.as_completed(futures)):
                 try:
-                    if (index + 1) % 10 == 0:  # After every 10 requests
-                        time.sleep(2)  # Sleep for 2 seconds
+                    if (index + 1) % 10 == 0:  
+                        time.sleep(2)  # 
                 except Exception as e:
                     logger.error(f"Error processing lead: {futures[future]['email']}. Error: {e}")
 
@@ -65,14 +65,13 @@ def update_lead_details():
     except Exception as e:
         logger.exception("Exception occurred get_lead_details %s", e)
 
-
-
-
 def update_daily_summary_report():
     try:
         logger.info("update_daily_summary_report is running")
-        summary = Summary(campaign_id="ecdc673c-3d90-4427-a556-d39c8b69ae9f")
-        summary.update_daily_summary()
+        all_campaigns = db.get_all_campaigns().data
+        for campaign in all_campaigns:
+            summary = Summary(campaign_id=campaign.get("campaign_id"))
+            summary.update_daily_summary()
     except Exception as e:
         logger.exception("Exception occurred update_daily_summary_report %s", e)
 
@@ -80,8 +79,10 @@ def update_daily_summary_report():
 def update_weekly_summary_report():
     try:
         logger.info("update_weekly_summary_report is running")
-        summary = Summary(campaign_id="ecdc673c-3d90-4427-a556-d39c8b69ae9f")
-        summary.update_weekly_summary()
+        all_campaigns = db.get_all_campaigns().data
+        for campaign in all_campaigns:
+            summary = Summary(campaign_id=campaign.get("campaign_id"))
+            summary.update_weekly_summary()
     except Exception as e:
         logger.exception("Exception occurred update_weekly_summary_report %s", e)
 
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     try:
         logger.info("scheduler is running")
         scheduler.add_job(update_lead_details, 'interval', hours=3)
-        scheduler.add_job(update_daily_summary_report, 'interval', hours=6)
+        scheduler.add_job(update_daily_summary_report, 'interval', hours=4)
         scheduler.add_job(update_weekly_summary_report,cron_trigger_at_11pm)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
@@ -111,4 +112,3 @@ if __name__ == "__main__":
             pass
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
-# 
