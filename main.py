@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
         title=settings.PROJECT_NAME,
         description=settings.PROJECT_DESCRIPTION,
         version=settings.VERSION,
+        middleware=make_middleware(),
 
     )
     init_routers(app_=app_)
