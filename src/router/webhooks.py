@@ -35,11 +35,13 @@ def outgoing_sms(data:dict):
     
 
 @instantly_webhook_router.post('/send')
-def send_email(lead_email:str):
+def send_email(request:dict):
     try:    
-            logger.info("Send mail webhook  - %s ", lead_email)
-            instantly_queue.enqueue(send_email_by_lead_email, lead_email)
-            # return send_email_by_lead_email(lead_email)
+
+        lead_email = request.get('lead_email')
+        logger.info("Send mail webhook  - %s ", lead_email)
+        instantly_queue.enqueue(send_email_by_lead_email, lead_email)
+        # return send_email_by_lead_email(lead_email)
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
 
