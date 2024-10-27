@@ -23,16 +23,16 @@ class InstantlyAPI:
         """
         data = {
             "reply_to_uuid": kwargs.get('uuid'),
-            "subject": "Re: TEST",
+            "subject":  kwargs.get('subject'),
             "from": kwargs.get('from_email'),
             "to": kwargs.get('to_email'),
             "body": kwargs.get('message'),
-            "cc": "",
-            "bcc": ""
+            "cc":   kwargs.get('cc'),
+            "bcc":  kwargs.get('bcc')
         }
         try:
             response = requests.post(f'{self.url}/unibox/emails/reply?api_key={self.api_key}', json=data, headers=self.headers)
-            return response.json() 
+            return response.status_code
         except requests.exceptions.RequestException as e:
             logger.error(f"An error occurred: {e}")
             return None

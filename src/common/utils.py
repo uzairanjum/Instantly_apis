@@ -18,10 +18,10 @@ gs_client = GoogleSheetClient()
 logger = get_logger("Utils")
 
 
-def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
+def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str, str], None]:
     campaign_details = db.get_campaign_details(campaign_id)
     if campaign_details is None:
-        return None, None, None
+        return None, None, None, None
     campaign_name = campaign_details.data[0].get("campaign_name")
     organization_details = campaign_details.data[0].get("organizations")
     organization_name = organization_details.get('name')
@@ -46,6 +46,8 @@ def format_email_history(all_emails: list):
     incoming_count = 0
     outgoing_count = 0
     first_reply_after = 0
+    message_uuid = None
+    message_uuid = all_emails[0].get('id')
     lead_status = get_status(all_emails[0].get('i_status'))
     all_emails.reverse() 
     last_timestamp = all_emails[0].get('timestamp_created')
@@ -77,7 +79,7 @@ def format_email_history(all_emails: list):
         message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content })
     if not lead_reply:
         first_reply_after = 0
-    return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after
+    return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after, message_uuid
 
 def get_status(value):
     status_mapping = {
@@ -97,13 +99,13 @@ def get_lead_details_history(lead_email: str, university_name: str,campaign_id, 
     response = ''
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
-    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after= format_email_history(all_emails)
+    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after, message_uuid= format_email_history(all_emails)
     if lead_reply:
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
         response = open_ai.generate_response_using_tools(formatted_history)
     last_timestamp_ = message_history[-1].get('timestamp')
-    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" }
+    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid}
     return data
 
 def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[WeeklyCampaignSummary, None]:
@@ -258,3 +260,32 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
         offset += limit 
 
     logger.info("leads_array %s", len(leads_array))
+
+
+def get_ae_data(ae_full_name):
+    df = pd.read_csv("manager_ae_bdr.csv")
+    ae_calendar_link = df.loc[df["AE Full Name"] == ae_full_name, "AE Calendar Links"].values[0]
+    bdr_email = df.loc[df["AE Full Name"] == ae_full_name, "BDR Email"].values[0]
+    manager_email = df.loc[df["AE Full Name"] == ae_full_name, "Manager Email"].values[0]
+    return {
+        "bcc": f"{manager_email}, jimmy.montchal@packback.co",
+        "cc": f"{bdr_email}",
+        "calendar_link": ae_calendar_link
+    }
+
+import re
+def format_http_url(s):
+    try:
+        pattern = r'\[(.*?)\]\((.*?)\)'
+        match = re.search(pattern, s)
+        
+        if match:
+            link_text = match.group(1)
+            url = match.group(2)
+            
+            if f'<a href="{url}">' in s:
+                return s
+            return re.sub(pattern, f'<a href="{url}">{link_text}</a>', s)
+        return s
+    except Exception as e:
+        return s

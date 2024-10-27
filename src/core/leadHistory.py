@@ -2,6 +2,7 @@ from src.configurations.instantly import InstantlyAPI
 from src.settings import settings
 from src.database.supabase import SupabaseClient
 from src.common.utils import get_lead_details_history, get_campaign_details
+from src.core.responder import make_draft_email
 from src.common.logger import get_logger
 from src.configurations.justcall import JustCallService
 
@@ -20,7 +21,7 @@ class LeadHistory:
         lead_details = self.instantly.get_lead_details(lead = self.lead_email, campaign_id = self.campaign_id)
         if lead_details:
             lead_details = lead_details[0].get('lead_data')
-            return {"email" : lead_details.get('email'), "University Name" : lead_details.get('University Name')}
+            return {"email" : lead_details.get('email'), "University Name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), "lead_last_name": lead_details.get('lastName')}
         return lead_details
 
     def get_lead_emails(self):
@@ -70,14 +71,50 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         return None
 
     data['flag'] = flag
-    # Save lead history to supabase
-    instantly_lead.save_lead_history(data)
-    logger.info("lead email processed - %s :: %s", index, lead_email)
+    
+    
 
     if event =='reply_received' and data.get('status') == "Interested":
         logger.info("reply received - %s", lead_email)
-        jc.send_message(f"New interested lead -\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
+        # jc.send_message(f"New interested lead -\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
+
+        draft_email = make_draft_email (lead_history.get('AE') if lead_history.get('AE') else lead_history.get('CO'), lead_history.get('lead_last_name'), data.get('conversation'))
+        data['draft_email'] = draft_email
+
+
+
+    # # Save lead history to supabase
+    instantly_lead.save_lead_history(data)
+    logger.info("lead email processed - %s :: %s", index, lead_email)
 
     return data
 
 
+def send_email_by_lead_email(lead_email):
+    try:
+        email_data = db.get_by_email(lead_email).data
+        if len(email_data) == 0:
+            return None
+        email_data = email_data[0]
+        draft_email = email_data.get('draft_email')
+        from_account = email_data.get('from_account')
+        message_uuid = email_data.get('message_uuid')
+        campaign_id = email_data.get('campaign_id')
+        _, _, instantly_api_key, _ = get_campaign_details(campaign_id)
+        instantly = InstantlyAPI(instantly_api_key)
+        send = instantly.send_reply(
+            message=draft_email.get('content'),
+            from_email=from_account,
+            to_email=lead_email,
+            uuid=message_uuid,
+            subject=draft_email.get('subject'), 
+            cc=draft_email.get('cc'),
+            bcc=draft_email.get('bcc')
+        )
+        if send == 200:
+            db.update({"draft_email": {}, "flag": False}, lead_email)
+        return True
+    except Exception as e:
+        logger.error("Error sending email - %s", e)
+        return False
+   

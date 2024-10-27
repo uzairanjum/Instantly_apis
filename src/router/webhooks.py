@@ -2,7 +2,7 @@ from fastapi import APIRouter,Request
 from fastapi.responses import JSONResponse
 from rq import Queue
 from src.common.logger import get_logger
-from src.core.leadHistory import get_data_from_instantly
+from src.core.leadHistory import get_data_from_instantly, send_email_by_lead_email
 from src.database.redis import RedisConfig
 
 logger = get_logger("Webhook")
@@ -30,6 +30,16 @@ def outgoing_sms(data:dict):
             logger.info("Outgoing webhook  - %s - %s", data.get('lead_email'), data.get('campaign_id'))
             instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'),'email_sent')
             # return get_data_from_instantly(data.get('lead_email'), data.get('campaign_id'),'email_sent')
+    finally:
+        return JSONResponse(content={"status": "success"}, status_code=200)
+    
+
+@instantly_webhook_router.post('/send')
+def send_email(lead_email:str):
+    try:    
+            logger.info("Send mail webhook  - %s ", lead_email)
+            instantly_queue.enqueue(send_email_by_lead_email, lead_email)
+            # return send_email_by_lead_email(lead_email)
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
 

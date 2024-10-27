@@ -51,6 +51,10 @@ class SupabaseClient():
         return self.db.table(self.summary).select("lead_email").eq('lead_email', email).execute()
     
     @retry(max_attempts=5, delay=2)
+    def get_by_email(self, email: str)-> Union[Dict, None]:
+        return self.db.table(self.summary).select("draft_email, from_account, message_uuid, campaign_id").eq('lead_email', email).execute()
+
+    @retry(max_attempts=5, delay=2)
     def get_campaign_details(self, campaign_id: str)-> Union[Dict, None]:
         return self.db.table(self.campaigns) \
             .select("campaign_id, campaign_name, organizations(name, api_key, zapier_url)") \
