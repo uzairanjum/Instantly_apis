@@ -94,7 +94,12 @@ def send_email_by_lead_email(lead_email):
     try:
         email_data = db.get_by_email(lead_email).data
         if len(email_data) == 0:
-            return None
+            logger.info("No draft email data found for lead - %s", lead_email)
+            return False
+        if email_data[0].get('draft_email') == {}:
+            logger.info("Draft email data is empty for lead - %s", lead_email)
+            return False
+        
         email_data = email_data[0]
         draft_email = email_data.get('draft_email')
         from_account = email_data.get('from_account')
@@ -112,6 +117,7 @@ def send_email_by_lead_email(lead_email):
             bcc=draft_email.get('bcc')
         )
         if send == 200:
+            logger.info("Email sent successfully - %s", lead_email)
             db.update({"draft_email": {}, "flag": False}, lead_email)
         return True
     except Exception as e:
