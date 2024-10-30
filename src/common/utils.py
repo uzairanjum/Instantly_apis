@@ -30,8 +30,9 @@ def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str, str], No
     return campaign_name, organization_name, instantly_api_key, zapier_url
 
 def get_csv_details(campaign_id:str, summary_type:str) -> Union[tuple[str, str], None]:
+    logger.info("get_csv_details %s - %s", campaign_id, summary_type)
     csv_details = db.get_csv_detail(campaign_id, summary_type)
-    if csv_details is None:
+    if len(csv_details.data) == 0:
         return None, None
     csv_name = csv_details.data[0].get('csv_name')
     worksheet_name = csv_details.data[0].get('worksheet_name')
@@ -170,7 +171,7 @@ def get_daily_summary_report(campaign_id: str):
     return leads_array
 
 def last_24_hours_time():
-    today = datetime.now()
+    today = datetime.utcnow()
     if today.weekday() == 0: 
         start_time = today - timedelta(days=3) 
     elif today.weekday() == 5: 

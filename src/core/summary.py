@@ -25,6 +25,8 @@ class Summary:
         if self.organization_name is None:
             return None
         csv_name, worksheet_name = self.get_daily_summary_csv_and_sheet()
+        if csv_name is None:
+            return None
         logger.info(f"organization_name: {self.organization_name}, csv_name: {csv_name}, worksheet_name: {worksheet_name}")
         update_daily_summary_report(self.campaign_id, self.campaign_name, self.organization_name, csv_name, worksheet_name)
 

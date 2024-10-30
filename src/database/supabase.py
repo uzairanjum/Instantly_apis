@@ -97,7 +97,8 @@ class SupabaseClient():
     
     @retry(max_attempts=5, delay=2)
     def get_last_twenty_four_records(self, campaign_id: str, last_date: str, end_date: str,offset: int = 0, limit: int = 100) -> Union[Dict, None]:
-        return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).eq('flag', True).gte('last_contact', last_date).lte('last_contact', end_date).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
+        logger.info("get_last_twenty_four_records %s - %s - %s", campaign_id, last_date, end_date)
+        return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).gte('last_contact', last_date).eq('flag', True).range(offset, offset + limit - 1).execute()
     
     @retry(max_attempts=5, delay=2)
     def insert_many(self, rows: list)-> Union[Dict, None]:
