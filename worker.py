@@ -34,31 +34,35 @@ def update_lead_details():
     try:
         logger.info("scheduler is running")
         offset = 0  
-        limit = 1000
+        limit = 800
         leads_array = [] 
         
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
 
-            if len(leads_array) >= 1000:
-                break
-            
             if len(all_leads) == 0: 
                 break
 
             leads_array.extend(all_leads)
             
             offset += limit 
-        logger.info("leads_array %s", len(leads_array))
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(get_data_from_instantly, row.get("lead_email", None), row.get("campaign_id", None),'cron', index + 1, True): row for index,row in enumerate(leads_array)}
-            for index, future in enumerate(concurrent.futures.as_completed(futures)):
-                try:
-                    if (index + 1) % 10 == 0:  
-                        time.sleep(2)  # 
-                except Exception as e:
-                    logger.error(f"Error processing lead: {futures[future]['email']}. Error: {e}")
+            logger.info("leads_array %s", len(leads_array))
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = {executor.submit(get_data_from_instantly, row.get("lead_email", None), row.get("campaign_id", None),'cron', index + 1, True): row for index,row in enumerate(all_leads)}
+                
+                for index, future in enumerate(concurrent.futures.as_completed(futures)):
+                    try:
+                        if (index + 1) % 10 == 0:  
+                            time.sleep(2)  # 
+                    except Exception as e:
+                        logger.error(f"Error processing lead: {futures[future]['email']}. Error: {e}")
 
+            # Check if all_leads is empty after processing
+            if len(all_leads) == 0: 
+                break  # This line ensures the loop exits when no more leads are available
+
+    except Exception as e:
+        logger.exception("Exception occurred get_lead_details %s", e)
 
 
 
@@ -102,8 +106,8 @@ except Exception as e:
 if __name__ == "__main__":
     try:
         logger.info("scheduler is running")
-        scheduler.add_job(update_lead_details, 'interval', hours=3)
-        scheduler.add_job(update_daily_summary_report, 'interval', hours=4)
+        scheduler.add_job(update_lead_details, 'interval', hours=2)
+        scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
         scheduler.add_job(update_weekly_summary_report,cron_trigger_at_11pm)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
