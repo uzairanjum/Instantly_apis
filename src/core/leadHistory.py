@@ -66,17 +66,18 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
     logger.info("lead email history found :: %s", lead_email)
 
     # Get information data by lead email, lead university name and lead emails
-    data =  get_lead_details_history(lead_email, lead_history.get('University Name'), campaign_id, lead_emails)
+    data =  get_lead_details_history(lead_email, campaign_id, lead_emails)
     if data is None:
         return None
 
     data['flag'] = flag
+    data['university_name'] = lead_history.get('University Name')
     
     
 
     if event =='reply_received' and data.get('status') == "Interested":
         logger.info("Interested lead - %s", lead_email)
-        # jc.send_message(f"New interested lead -\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
+        jc.send_message(f"New interested lead -\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
 
         draft_email = make_draft_email (lead_history.get('AE') if lead_history.get('AE') else lead_history.get('CO'), lead_history.get('lead_last_name'), data.get('conversation'))
         logger.info("Draft email - %s", draft_email)

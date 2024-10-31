@@ -96,7 +96,7 @@ def get_status(value):
     }
     return status_mapping.get(value, "Lead")
 
-def get_lead_details_history(lead_email: str, university_name: str,campaign_id,  all_emails: list):
+def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list):
     response = ''
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
@@ -106,7 +106,7 @@ def get_lead_details_history(lead_email: str, university_name: str,campaign_id, 
         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
         response = open_ai.generate_response_using_tools(formatted_history)
     last_timestamp_ = message_history[-1].get('timestamp')
-    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "university_name": university_name, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid}
+    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid}
     return data
 
 def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[WeeklyCampaignSummary, None]:
@@ -210,7 +210,10 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
     today, start_time = last_24_hours_time()
     offset = 0  
     limit = 800
-    leads_array = []   
+    leads_array = []    
+
+    logger.info(f"csv_name {csv_name}")
+    logger.info(f"worksheet_name {worksheet_name}")
 
     while True:
         all_leads = db.get_last_twenty_four_records(campaign_id, start_time, today,offset=offset, limit=limit).data
