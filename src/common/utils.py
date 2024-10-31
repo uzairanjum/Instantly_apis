@@ -9,7 +9,7 @@ from src.database.supabase import SupabaseClient
 from typing import Union
 from src.configurations.googleSheet import GoogleSheetClient
 import pandas as pd
-
+import re
 
 
 open_ai = OpenAiConfig(settings.OPENAI_API_KEY)
@@ -18,16 +18,15 @@ gs_client = GoogleSheetClient()
 logger = get_logger("Utils")
 
 
-def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str, str], None]:
+def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
     campaign_details = db.get_campaign_details(campaign_id)
     if campaign_details is None:
         return None, None, None, None
     campaign_name = campaign_details.data[0].get("campaign_name")
     organization_details = campaign_details.data[0].get("organizations")
     organization_name = organization_details.get('name')
-    zapier_url = organization_details.get('zapier_url')
     instantly_api_key = organization_details.get('api_key')
-    return campaign_name, organization_name, instantly_api_key, zapier_url
+    return campaign_name, organization_name, instantly_api_key
 
 def get_csv_details(campaign_id:str, summary_type:str) -> Union[tuple[str, str], None]:
     logger.info("get_csv_details %s - %s", campaign_id, summary_type)
@@ -110,7 +109,7 @@ def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list):
     return data
 
 def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[WeeklyCampaignSummary, None]:
-    _, _, instantly_api_key, _ = get_campaign_details(campaign_id)
+    _, _, instantly_api_key= get_campaign_details(campaign_id)
     if not instantly_api_key:
         return None
     instantly = InstantlyAPI(instantly_api_key)
@@ -120,6 +119,7 @@ def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[Weekl
     start_of_week, end_of_week  = get_last_week_start_and_end_of_week()
     positive_reply = db.get_count(campaign_id, start_of_week, end_of_week).count
     domain_health = get_domain_health_count(client_name)
+    print(f"domain_health {domain_health}")
     start_of_week = start_of_week.date().strftime("%m/%d/%Y")
     end_of_week = end_of_week.date().strftime("%m/%d/%Y")
     weekly_response = instantly.get_weekly_campaign_details(campaign_id=campaign_id, start_date=start_of_week, end_date=end_of_week)
@@ -136,9 +136,18 @@ def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[Weekl
     return response
 
 def get_domain_health_count(client_name: str):
+    total_count = 0
+    if client_name == 'packback':
+        total_count = 252
+    if client_name == 'array':
+        total_count = 100
+    if client_name == 'havocshield':
+        total_count = 120
+
+
     start_of_week, end_of_week  = get_last_week_start_and_end_of_week()
     domain_health_count = db.get_domain_health_count(client_name,start_of_week, end_of_week).count
-    domain_health = f"{domain_health_count}/252"
+    domain_health = f"{domain_health_count}/{total_count}"
     return domain_health
 
 # def get_last_week_start_and_end_of_week():
@@ -199,6 +208,17 @@ def update_weekly_summary_report(campaign_id: str, campaign_name: str, organizat
         data.domain_health,              
         
     ]
+    # new_row = [
+    #     campaign_name,
+    #     "data.week",  
+    #     "data.total_leads",                
+    #     "data.contacted",         
+    #     "data.leads_who_replied",              
+    #     "data.positive_reply",           
+    #     "data.not_yet_contacted",          
+    #     "data.domain_health",              
+        
+    # ]
     logger.info("Weekly report data %s", new_row)
 
     try:
@@ -258,7 +278,8 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
                 dataframe = pd.concat([dataframe, new_row], ignore_index=True) 
 
 
-        dataframe = dataframe.fillna('') 
+        # dataframe = dataframe.fillna('') 
+        dataframe = dataframe.infer_objects(copy=False)
         gs_client.update_records(worksheet, dataframe)
         leads_array.extend(all_leads)
         offset += limit 
@@ -277,7 +298,6 @@ def get_ae_data(ae_full_name):
         "calendar_link": ae_calendar_link
     }
 
-import re
 def format_http_url(s):
     try:
         pattern = r'\[(.*?)\]\((.*?)\)'

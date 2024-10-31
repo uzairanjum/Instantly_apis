@@ -47,7 +47,7 @@ class LeadHistory:
 def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = False):
 
 
-    campaign_name, organization_name, instantly_api_key, zapier_url = get_campaign_details(campaign_id)
+    campaign_name, organization_name, instantly_api_key = get_campaign_details(campaign_id)
     if organization_name is None:
         return None
     instantly_lead = LeadHistory(lead_email, campaign_id, instantly_api_key)

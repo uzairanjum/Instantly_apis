@@ -11,7 +11,7 @@ db = SupabaseClient()
 class Summary:
     def __init__(self, campaign_id):
         self.campaign_id = campaign_id
-        self.campaign_name, self.organization_name = self.get_campaign_details()
+        self.campaign_name, self.organization_name = self.get_campaign_details_()
 
     def update_weekly_summary(self):
         if self.organization_name is None:
@@ -38,8 +38,8 @@ class Summary:
         csv_name, worksheet_name = get_csv_details(self.campaign_id, SummaryType.WEEKLY.value)
         return csv_name, worksheet_name
 
-    def get_campaign_details(self):
-        campaign_name, organization_name, _, _ = get_campaign_details(self.campaign_id)
+    def get_campaign_details_(self):
+        campaign_name, organization_name, _ = get_campaign_details(self.campaign_id)
         logger.info(f"Organization name: {organization_name}")
         return campaign_name, organization_name
 
