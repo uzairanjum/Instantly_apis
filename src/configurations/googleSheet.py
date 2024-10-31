@@ -32,14 +32,14 @@ class GoogleSheetClient:
         worksheet.append_row(new_row)
         print(f"New row added: {new_row}")
     
-    def update_records(self,worksheet, dataframe):
-    # Prepare the data for batch update
+    def update_records(self, worksheet, dataframe):
+        # Prepare the data for batch update
         data = []
         for index, row in dataframe.iterrows():
-            # Assuming the first column is the row index and the rest are the values
+            # Update only columns A to M
             data.append({
-                'range': f'A{index + 2}:Z{index + 2}',  # Adjust the range as needed
-                'values': [row.tolist()]
+                'range': f'A{index + 2}:M{index + 2}',  # Set range to A through M
+                'values': [row.tolist()[:13]]  # Limit values to 13 columns (A-M)
             })
 
         # Perform the batch update
