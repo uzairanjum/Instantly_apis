@@ -35,18 +35,13 @@ def update_lead_details():
         logger.info("scheduler is running")
         offset = 0  
         limit = 800
-        leads_array = [] 
         
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
 
             if len(all_leads) == 0: 
                 break
-
-            leads_array.extend(all_leads)
-            
             offset += limit 
-            logger.info("leads_array %s", len(leads_array))
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {executor.submit(get_data_from_instantly, row.get("lead_email", None), row.get("campaign_id", None),'cron', index + 1, True): row for index,row in enumerate(all_leads)}
                 
@@ -57,7 +52,6 @@ def update_lead_details():
                     except Exception as e:
                         logger.error(f"Error processing lead: {futures[future]['email']}. Error: {e}")
 
-            # Check if all_leads is empty after processing
             if len(all_leads) == 0: 
                 break  # This line ensures the loop exits when no more leads are available
 
@@ -66,25 +60,29 @@ def update_lead_details():
 
 
 
-    except Exception as e:
-        logger.exception("Exception occurred get_lead_details %s", e)
-
 def update_daily_summary_report():
     try:
         logger.info("update_daily_summary_report is running")
-        all_campaigns = db.get_all_campaigns().data
-        for campaign in all_campaigns:
-            summary = Summary(campaign_id=campaign.get("campaign_id"))
-            summary.update_daily_summary()
+        for organization_id in [1, 2, 3]:
+            all_campaigns = db.get_all_campaigns(organization_id).data
+            for campaign in all_campaigns:
+                print(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
+                # if campaign.get("campaign_id") in ["01ed88d3-e261-4026-b0a2-b65a2e100394", "612488c7-dc53-4bc6-a645-25fc5cb60b37" ] :
+                # if campaign.get("campaign_id") in ["ba6b3507-c26c-484e-a773-dd36a4c07b65", "dedbd915-f18a-4aaf-9ce5-89d2442be355", "25acb19a-ef31-4028-ade1-a0a822654007"] :
+                summary = Summary(campaign_id=campaign.get("campaign_id"))
+                summary.update_daily_summary()
     except Exception as e:
         logger.exception("Exception occurred update_daily_summary_report %s", e)
 
 
-def update_weekly_summary_report():
+def update_weekly_summary_report(organization_id):
     try:
         logger.info("update_weekly_summary_report is running")
-        all_campaigns = db.get_all_campaigns().data
+        all_campaigns = db.get_all_campaigns(organization_id).data
         for campaign in all_campaigns:
+            print(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
+            # if campaign.get("campaign_id") in ["01ed88d3-e261-4026-b0a2-b65a2e100394", "612488c7-dc53-4bc6-a645-25fc5cb60b37" ] :
+            # if campaign.get("campaign_id") in ["ba6b3507-c26c-484e-a773-dd36a4c07b65", "dedbd915-f18a-4aaf-9ce5-89d2442be355", "25acb19a-ef31-4028-ade1-a0a822654007"] :
             summary = Summary(campaign_id=campaign.get("campaign_id"))
             summary.update_weekly_summary()
     except Exception as e:
@@ -96,7 +94,8 @@ def update_weekly_summary_report():
 
 try:
     scheduler = BackgroundScheduler()
-    cron_trigger_at_11pm = CronTrigger( hour=23, minute=0, second=0, day_of_week="tue", timezone=ct_timezone)
+    cron_trigger_at_11_sun_pm = CronTrigger( hour=23, minute=0, second=0, day_of_week="sun", timezone=ct_timezone)
+    cron_trigger_at_11_tue_pm = CronTrigger( hour=23, minute=0, second=0, day_of_week="tue", timezone=ct_timezone)
     
 except Exception as e:
     logger.error(f"Error: {e}")
@@ -108,7 +107,9 @@ if __name__ == "__main__":
         logger.info("scheduler is running")
         scheduler.add_job(update_lead_details, 'interval', hours=2)
         scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
-        scheduler.add_job(update_weekly_summary_report,cron_trigger_at_11pm)
+        scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
+        scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[2]) 
+        scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()

@@ -128,9 +128,9 @@ def get_domain_health_count(client_name: str):
     if client_name == 'packback':
         total_count = 252
     if client_name == 'array':
-        total_count = 100
+        total_count = 14
     if client_name == 'havocshield':
-        total_count = 120
+        total_count = 10
 
 
     start_of_week, end_of_week  = get_last_week_start_and_end_of_week()
@@ -138,19 +138,18 @@ def get_domain_health_count(client_name: str):
     domain_health = f"{domain_health_count}/{total_count}"
     return domain_health
 
+def get_last_week_start_and_end_of_week():
+    start_of_week = datetime.now() - timedelta(days=7) 
+    end_of_week = start_of_week + timedelta(days=7) 
+    
+    return start_of_week, end_of_week
 # def get_last_week_start_and_end_of_week():
 #     today = datetime.now()
-#     start_of_week = today - timedelta(days=today.weekday() + 7)
-#     end_of_week = start_of_week + timedelta(days=6)
-#     return  start_of_week , end_of_week
-
-def get_last_week_start_and_end_of_week():
-    today = datetime.now()
-    # Shift the weekday calculation to make Wednesday the start of the week
-    days_since_wednesday = (today.weekday() - 2) % 7  # 2 corresponds to Wednesday
-    start_of_week = today - timedelta(days=days_since_wednesday + 7)  # Go back to the previous Wednesday
-    end_of_week = start_of_week + timedelta(days=6)  # End of the week is Tuesday
-    return start_of_week, end_of_week
+#     # Shift the weekday calculation to make Wednesday the start of the week
+#     days_since_wednesday = (today.weekday() - 2) % 7  # 2 corresponds to Wednesday
+#     start_of_week = today - timedelta(days=days_since_wednesday + 7)  # Go back to the previous Wednesday
+#     end_of_week = start_of_week + timedelta(days=6)  # End of the week is Tuesday
+#     return start_of_week, end_of_week
 
 
 def get_daily_summary_report(campaign_id: str):

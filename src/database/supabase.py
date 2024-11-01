@@ -62,8 +62,8 @@ class SupabaseClient():
             .execute()
     
     @retry(max_attempts=5, delay=2)
-    def get_all_campaigns(self)-> Union[Dict, None]:
-        return self.db.table(self.campaigns).select("campaign_id, campaign_name").eq('active', True).execute()
+    def get_all_campaigns(self, organization_id: str)-> Union[Dict, None]:
+        return self.db.table(self.campaigns).select("campaign_id, campaign_name").eq('organization_id', organization_id).eq('active', True).execute()
     
     @retry(max_attempts=5, delay=2)
     def get_csv_detail(self, campaign_id: str, summary_type: SummaryType)-> Union[Dict, None]:
