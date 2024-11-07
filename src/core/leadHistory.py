@@ -107,7 +107,7 @@ def send_email_by_lead_email(lead_email):
         from_account = email_data.get('from_account')
         message_uuid = email_data.get('message_uuid')
         campaign_id = email_data.get('campaign_id')
-        _, _, instantly_api_key, _ = get_campaign_details(campaign_id)
+        _, _, instantly_api_key = get_campaign_details(campaign_id)
         instantly = InstantlyAPI(instantly_api_key)
         send = instantly.send_reply(
             message=draft_email.get('content'),
@@ -126,3 +126,108 @@ def send_email_by_lead_email(lead_email):
         logger.error("Error sending email - %s", e)
         return False
    
+
+
+
+# def forward_email_by_lead_email(lead_email):
+#     try:
+#         email_data = db.get_by_email(lead_email).data
+#         if len(email_data) == 0:
+#             logger.info("No draft email data found for lead - %s", lead_email)
+#             return False
+        
+        
+#         conversation = email_data[0].get('conversation')
+#         if conversation == []:
+#             logger.info("Conversation data is empty for lead - %s", lead_email)
+#             return False
+#         email_data = email_data[0]
+#         from_account = email_data.get('from_account')
+#         message_uuid = email_data.get('message_uuid')
+#         campaign_id = email_data.get('campaign_id')
+#         _, _, instantly_api_key = get_campaign_details(campaign_id)
+#         instantly = InstantlyAPI(instantly_api_key)
+        
+
+#         email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+
+
+#         print("conversation[0].get('subject')",conversation[0].get('subject'))
+#         send = instantly.send_reply(
+#             message=email_body,
+#             from_email=from_account,
+#             to_email='rajpoot.waryah@gmail.com',
+#             uuid=message_uuid,
+#             subject=conversation[0].get('subject'), 
+    
+#         )
+#         if send == 200:
+#             logger.info("Email sent successfully - %s", lead_email)
+#             db.update({"draft_email": {}, "flag": False}, lead_email)
+#         return True
+#     except Exception as e:
+#         logger.error("Error sending email - %s", e)
+#         return False
+    
+# from datetime import datetime
+# from pytz import timezone
+
+# ct_timezone = timezone('US/Central')
+
+
+# def construct_email_body_from_history(messages:list, lead_email:str, account_email:str):
+#     html = '<div style="font-family: Arial, sans-serif; color: #202124; max-width: 600px; margin: auto; background-color: #f1f3f4; padding: 20px; border-radius: 8px;">'
+#     indent_level = len(messages)
+
+#     data = []
+
+#     # Prepare message data
+#     for message in messages:
+#         if message.get('role') == 'user':
+#             from_account = lead_email
+#             to_account = account_email
+#         else:
+#             from_account = account_email
+#             to_account = lead_email
+
+#         data.append({
+#             "from": from_account,
+#             "to": to_account,
+#             "body": message['content'],
+#             "date": convert_timestamp_for_email_thread_history(message['timestamp']),
+#         })
+
+#     # Construct the HTML for each message, newest to oldest
+#     for message in data:
+#         padding_style = f"padding-left: {indent_level * 10}px; color: black;"
+#         html_segment = f"""
+#         <div style="border-bottom: 1px solid #e0e0e0; padding: 10px 0; margin-bottom: 10px; {padding_style}">
+#             <div style="color: #5f6368; font-size: 12px; margin-bottom: 8px;">
+#                 <strong>Date:</strong> {message['date']}<br>
+#                 <strong>From:</strong> {message['from']}<br>
+#                 <strong>To:</strong> {message['to']}
+#             </div>
+#             <div style="font-size: 14px; line-height: 1.6; margin-top: 5px; color: black; white-space: pre-wrap;">
+#                 {message['body'].replace('\n', '<br>')}
+#             </div>
+#         </div>
+#         """
+#         html = html_segment + html
+#         indent_level -= 1
+
+#     # Close the thread container
+#     html += '</div>'
+
+#     return html
+
+
+
+# def convert_timestamp_for_email_thread_history(timestamp):
+#     try:
+#         dt = datetime.fromisoformat(timestamp)
+#         dt = dt.astimezone(ct_timezone)
+#         formatted_dt = dt.strftime('%a, %b %d, %Y at %I:%M %p')
+#         return formatted_dt
+#     except Exception as e:
+#         return timestamp    
+  
