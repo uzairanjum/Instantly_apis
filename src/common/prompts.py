@@ -81,7 +81,7 @@ Thank you for letting me know. If anything changes, I'm here to help. Take care!
 Template 6: 
 
 Just to clarify, Packback is an inquiry-based student discussion platform. For added clarity, we do not use AI to answer these questions; your students answer the questions. We use AI to coach students into asking better questions.
-Would you be open to a 15-minute conversation with my colleague Billy? We’d love to show you how your students can use it to ask and answer similar questions while we take care of all the grading.
+Would you be open to a 15-minute conversation with my colleague {ae_first_name}? We’d love to show you how your students can use it to ask and answer similar questions while we take care of all the grading.
 
 
 
