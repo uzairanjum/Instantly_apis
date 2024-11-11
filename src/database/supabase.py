@@ -52,7 +52,7 @@ class SupabaseClient():
     
     @retry(max_attempts=5, delay=2)
     def get_by_email(self, email: str)-> Union[Dict, None]:
-        return self.db.table(self.summary).select("draft_email, from_account, message_uuid, campaign_id").eq('lead_email', email).execute()
+        return self.db.table(self.summary).select("draft_email, from_account, message_uuid, campaign_id, conversation").eq('lead_email', email).execute()
 
     @retry(max_attempts=5, delay=2)
     def get_campaign_details(self, campaign_id: str)-> Union[Dict, None]:
@@ -73,6 +73,9 @@ class SupabaseClient():
     def get_all_false_flag(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
         return self.db.table(self.summary).select("lead_email, campaign_id").eq('flag', False).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
     
+    @retry(max_attempts=5, delay=2)
+    def get_all_true_flag_leads(self,start_date: str, end_date: str, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        return self.db.table(self.summary).select("lead_email, campaign_id").eq('flag', True).gt('sent_date', start_date).lt('sent_date', end_date).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
     
     @retry(max_attempts=5, delay=2)
     def get_all_leads(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
@@ -96,8 +99,8 @@ class SupabaseClient():
         return self.db.table(self.domain_health).select("score", count="exact").gt('score', 8).eq('client_name', client_name).gt('updated_at', start_of_week).lt('updated_at', end_of_week).execute()
     
     @retry(max_attempts=5, delay=2)
-    def get_last_twenty_four_records(self, campaign_id: str, last_date: str, end_date: str,offset: int = 0, limit: int = 100) -> Union[Dict, None]:
-        logger.info("get_last_twenty_four_records %s - %s - %s", campaign_id, last_date, end_date)
+    def get_flag_true_records(self, campaign_id: str, last_date: str,offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        logger.info("get_flag_true_records %s - %s ", campaign_id, last_date)
         return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).gte('last_contact', last_date).eq('flag', True).range(offset, offset + limit - 1).execute()
     
     @retry(max_attempts=5, delay=2)

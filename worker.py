@@ -3,6 +3,7 @@ import time
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.core.leadHistory import get_data_from_instantly
+from src.common.utils import get_last_three_days_start_and_end_of_day
 from src.common.logger import get_logger
 from src.database.supabase import SupabaseClient
 from src.database.redis import RedisConfig
@@ -34,7 +35,7 @@ def update_lead_details():
     try:
         logger.info("scheduler is running")
         offset = 0  
-        limit = 800
+        limit = 500
         
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
@@ -59,14 +60,13 @@ def update_lead_details():
         logger.exception("Exception occurred get_lead_details %s", e)
 
 
-
 def update_daily_summary_report():
     try:
         logger.info("update_daily_summary_report is running")
         for organization_id in [1, 2, 3]:
             all_campaigns = db.get_all_campaigns(organization_id).data
             for campaign in all_campaigns:
-                print(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
+                logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
                 # if campaign.get("campaign_id") in ["01ed88d3-e261-4026-b0a2-b65a2e100394", "612488c7-dc53-4bc6-a645-25fc5cb60b37" ] :
                 # if campaign.get("campaign_id") in ["ba6b3507-c26c-484e-a773-dd36a4c07b65", "dedbd915-f18a-4aaf-9ce5-89d2442be355", "25acb19a-ef31-4028-ade1-a0a822654007"] :
                 summary = Summary(campaign_id=campaign.get("campaign_id"))
@@ -74,6 +74,17 @@ def update_daily_summary_report():
     except Exception as e:
         logger.exception("Exception occurred update_daily_summary_report %s", e)
 
+def three_days_summary_report():
+    try:
+        logger.info("three_days_summary_report is running")
+        for organization_id in [1,2,3]:
+            all_campaigns = db.get_all_campaigns(organization_id).data
+            for campaign in all_campaigns:
+                logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}\n\n")
+                summary = Summary(campaign_id=campaign.get("campaign_id"))
+                summary.three_days_summary_report()
+    except Exception as e:
+        logger.exception("Exception occurred update_daily_summary_report %s", e)
 
 def update_weekly_summary_report(organization_id):
     try:
@@ -104,9 +115,14 @@ except Exception as e:
 
 if __name__ == "__main__":
     try:
+        # update_lead_details()
         logger.info("scheduler is running")
-        scheduler.add_job(update_lead_details, 'interval', hours=2)
+        scheduler.add_job(update_lead_details, 'interval', hours=1)
+
         scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
+        scheduler.add_job(three_days_summary_report, 'interval', hours=12)
+
+
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[2]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
@@ -117,3 +133,4 @@ if __name__ == "__main__":
             pass
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
+

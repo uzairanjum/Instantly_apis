@@ -158,7 +158,7 @@ def get_daily_summary_report(campaign_id: str):
     limit = 1000
     leads_array = []   
     while True:
-        all_leads = db.get_last_twenty_four_records(campaign_id, start_time, today,offset=offset, limit=limit).data
+        all_leads = db.get_flag_true_records(campaign_id, start_time, today,offset=offset, limit=limit).data
         if len(all_leads) == 0: 
             break
         leads_array.extend(all_leads)
@@ -178,101 +178,165 @@ def last_24_hours_time():
         start_time = today - timedelta(days=1)  
     return today, start_time
 
+def get_last_three_days_start_and_end_of_day():
+    today = datetime.utcnow()
+    start_date = today - timedelta(days=3)
+    end_date = today
+    return start_date, end_date
+
 def update_weekly_summary_report(campaign_id: str, campaign_name: str, organization_name: str, csv_name: str, worksheet_name: str):
-    worksheet = gs_client.open_sheet(csv_name, worksheet_name)
-    data = get_weekly_summary_report(campaign_id, organization_name)
-    if data is None:
-        return []
-
-    new_row = [
-        campaign_name,
-        data.week,  
-        data.total_leads,                
-        data.contacted,         
-        data.leads_who_replied,              
-        data.positive_reply,           
-        data.not_yet_contacted,          
-        data.domain_health,              
-        
-    ]
-    # new_row = [
-    #     campaign_name,
-    #     "data.week",  
-    #     "data.total_leads",                
-    #     "data.contacted",         
-    #     "data.leads_who_replied",              
-    #     "data.positive_reply",           
-    #     "data.not_yet_contacted",          
-    #     "data.domain_health",              
-        
-    # ]
-    logger.info("Weekly report data %s", new_row)
-
     try:
-        worksheet.append_row(new_row)
+        worksheet = gs_client.open_sheet(csv_name, worksheet_name)
+        data = get_weekly_summary_report(campaign_id, organization_name)
+        if data is None:
+            return []
+
+        new_row = [
+            campaign_name,
+            data.week,  
+            data.total_leads,                
+            data.contacted,         
+            data.leads_who_replied,              
+            data.positive_reply,           
+            data.not_yet_contacted,          
+            data.domain_health,              
+            
+        ]
+        logger.info("Weekly report data %s", new_row)
+
+        try:
+            worksheet.append_row(new_row)
+        except Exception as e:
+            logger.error(f"Error appending row: {e}")
     except Exception as e:
-        logger.error(f"Error appending row: {e}")
+        logger.error(f"Error update_weekly_summary_report: {e}")
 
 def update_daily_summary_report(campaign_id: str, campaign_name: str, organization_name: str, csv_name: str, worksheet_name: str):
-    today, start_time = last_24_hours_time()
-    offset = 0  
-    limit = 800
-    leads_array = []    
+    try:    
+        today, start_time = last_24_hours_time()
+        offset = 0  
+        limit = 500
+        leads_array = []    
 
-    logger.info(f"csv_name {csv_name}")
-    logger.info(f"worksheet_name {worksheet_name}")
+        logger.info(f"csv_name {csv_name}")
+        logger.info(f"worksheet_name {worksheet_name}")
 
-    while True:
-        all_leads = db.get_last_twenty_four_records(campaign_id, start_time, today,offset=offset, limit=limit).data
-        if len(all_leads) == 0: 
-            break
+        while True:
+            all_leads = db.get_flag_true_records(campaign_id, start_time, today,offset=offset, limit=limit).data
+            if len(all_leads) == 0: 
+                break
 
-        worksheet = gs_client.open_sheet(csv_name, worksheet_name)
-        all_csv_records = gs_client.get_all_records(worksheet)
-        dataframe = pd.DataFrame(all_csv_records)
-      
-        for index , lead in enumerate(all_leads):
-            email_to_check = lead.get('lead_email')
-            logger.info(f" {index +1} :: {email_to_check}")
-            email_exists =None
-            if len(all_csv_records) >0:
-                email_exists = email_to_check in dataframe['Email'].values  # Assuming 'lead_email' is the column name
+            worksheet = gs_client.open_sheet(csv_name, worksheet_name)
+            all_csv_records = gs_client.get_all_records(worksheet)
+            dataframe = pd.DataFrame(all_csv_records)
+        
+            for index , lead in enumerate(all_leads):
+                email_to_check = lead.get('lead_email')
+                logger.info(f" {index +1} :: {email_to_check}")
+                email_exists =None
+                if len(all_csv_records) >0:
+                    email_exists = email_to_check in dataframe['Email'].values  # Assuming 'lead_email' is the column name
 
-            if email_exists:
-                logger.info(f"Email exists")
-                columns = ["Campaign Name", "Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
-                values = [campaign_name, lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
-                dataframe.loc[dataframe['Email'] == email_to_check, columns] = values  # Increment outgoing count
-            else:
-                logger.info(f"Email not exists")
-                # Append a new row if the email does not exist
-                data = { 
-                    "Campaign Name": campaign_name,
-                    "Email" :lead.get('lead_email'),
-                    "School Name": lead.get('university_name'),
-                    "Sent Date":lead.get('sent_date'),
-                    "Last Contact":lead.get('last_contact'),
-                    "Outgoing":lead.get('outgoing'),
-                    "Incoming":lead.get('incoming'),
-                    "Reply":lead.get('reply'),
-                    "Status" :lead.get('status'),
-                    "From Account":lead.get('from_account'),
-                    "Inbox Status":lead.get('lead_status'),
-                    "First Reply After":lead.get('first_reply_after'),
-                    "Conversation URL":lead.get('url')
-                }
-                new_row = pd.DataFrame([data])  # Convert dict to DataFrame
-                dataframe = pd.concat([dataframe, new_row], ignore_index=True) 
+                if email_exists:
+                    logger.info(f"Email exists")
+                    columns = ["Campaign Name", "Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
+                    values = [campaign_name, lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
+                    dataframe.loc[dataframe['Email'] == email_to_check, columns] = values  # Increment outgoing count
+                else:
+                    logger.info(f"Email not exists")
+                    # Append a new row if the email does not exist
+                    data = { 
+                        "Campaign Name": campaign_name,
+                        "Email" :lead.get('lead_email'),
+                        "School Name": lead.get('university_name'),
+                        "Sent Date":lead.get('sent_date'),
+                        "Last Contact":lead.get('last_contact'),
+                        "Outgoing":lead.get('outgoing'),
+                        "Incoming":lead.get('incoming'),
+                        "Reply":lead.get('reply'),
+                        "Status" :lead.get('status'),
+                        "From Account":lead.get('from_account'),
+                        "Inbox Status":lead.get('lead_status'),
+                        "First Reply After":lead.get('first_reply_after'),
+                        "Conversation URL":lead.get('url')
+                    }
+                    new_row = pd.DataFrame([data])  # Convert dict to DataFrame
+                    dataframe = pd.concat([dataframe, new_row], ignore_index=True) 
 
 
-        # dataframe = dataframe.fillna('') 
-        dataframe = dataframe.infer_objects(copy=False)
-        gs_client.update_records(worksheet, dataframe)
-        leads_array.extend(all_leads)
-        offset += limit 
+            # dataframe = dataframe.fillna('') 
+            dataframe = dataframe.infer_objects(copy=False)
+            gs_client.update_records(worksheet, dataframe)
+            leads_array.extend(all_leads)
+            offset += limit 
 
-    logger.info("leads_array %s", len(leads_array))
+        logger.info("leads_array %s", len(leads_array))
+    except Exception as e:
+        logger.error(f"Error update_daily_summary_report: {e}")
 
+def three_days_summary_report(campaign_id: str, campaign_name: str, organization_name: str, csv_name: str, worksheet_name: str):
+    try:
+        start_time, _ = get_last_three_days_start_and_end_of_day()
+        offset = 0  
+        limit = 500
+        leads_array = []    
+
+        logger.info(f"csv_name {csv_name}")
+        logger.info(f"worksheet_name {worksheet_name}")
+        logger.info(f"start_time {start_time}")
+
+        while True:
+            all_leads = db.get_flag_true_records(campaign_id, start_time,offset=offset, limit=limit).data
+            if len(all_leads) == 0: 
+                break
+
+            worksheet = gs_client.open_sheet(csv_name, worksheet_name)
+            all_csv_records = gs_client.get_all_records(worksheet)
+            dataframe = pd.DataFrame(all_csv_records)
+        
+            for index , lead in enumerate(all_leads):
+                email_to_check = lead.get('lead_email')
+                logger.info(f" {index +1} :: {email_to_check}")
+                email_exists =None
+                if len(all_csv_records) >0:
+                    email_exists = email_to_check in dataframe['Email'].values  # Assuming 'lead_email' is the column name
+
+                if email_exists:
+                    logger.info(f"Email exists")
+                    columns = ["Campaign Name", "Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
+                    values = [campaign_name, lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
+                    dataframe.loc[dataframe['Email'] == email_to_check, columns] = values  # Increment outgoing count
+                else:
+                    logger.info(f"Email not exists")
+                    # Append a new row if the email does not exist
+                    data = { 
+                        "Campaign Name": campaign_name,
+                        "Email" :lead.get('lead_email'),
+                        "School Name": lead.get('university_name'),
+                        "Sent Date":lead.get('sent_date'),
+                        "Last Contact":lead.get('last_contact'),
+                        "Outgoing":lead.get('outgoing'),
+                        "Incoming":lead.get('incoming'),
+                        "Reply":lead.get('reply'),
+                        "Status" :lead.get('status'),
+                        "From Account":lead.get('from_account'),
+                        "Inbox Status":lead.get('lead_status'),
+                        "First Reply After":lead.get('first_reply_after'),
+                        "Conversation URL":lead.get('url')
+                    }
+                    new_row = pd.DataFrame([data])  # Convert dict to DataFrame
+                    dataframe = pd.concat([dataframe, new_row], ignore_index=True) 
+
+
+            # dataframe = dataframe.fillna('') 
+            dataframe = dataframe.infer_objects(copy=False)
+            gs_client.update_records(worksheet, dataframe)
+            leads_array.extend(all_leads)
+            offset += limit 
+
+        logger.info("leads_array %s", len(leads_array))
+    except Exception as e:
+        logger.error(f"Error three_days_summary_report: {e}")
 
 def get_ae_data(ae_full_name):
     df = pd.read_csv("manager_ae_bdr.csv")
@@ -331,3 +395,71 @@ def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list):
     last_timestamp_ = message_history[-1].get('timestamp')
     data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid}
     return data
+
+
+
+def insert_many_domain_health(result: list):
+    try:
+        insertion = db.insert_many('domain_health', result)
+        print(f"insert_many_domain_health: {insertion}")
+        return True
+    except Exception as e:
+        logger.error(f"Error insert_many_domain_health: {e}")
+        return False
+    
+
+
+def construct_email_body_from_history(messages:list, lead_email:str, account_email:str):
+    html = '<div style="font-family: Arial, sans-serif; color: #202124; max-width: 600px; margin: auto; background-color: #f1f3f4; padding: 20px; border-radius: 8px;">'
+    indent_level = len(messages)
+
+    data = []
+
+    # Prepare message data
+    for message in messages:
+        if message.get('role') == 'user':
+            from_account = lead_email
+            to_account = account_email
+        else:
+            from_account = account_email
+            to_account = lead_email
+
+        data.append({
+            "from": from_account,
+            "to": to_account,
+            "body": message['content'],
+            "date": convert_timestamp_for_email_thread_history(message['timestamp']),
+        })
+
+    # Construct the HTML for each message, newest to oldest
+    for message in data:
+        padding_style = f"padding-left: {indent_level * 10}px; color: black;"
+        html_segment = f"""
+        <div style="border-bottom: 1px solid #e0e0e0; padding: 10px 0; margin-bottom: 10px; {padding_style}">
+            <div style="color: #5f6368; font-size: 12px; margin-bottom: 8px;">
+                <strong>Date:</strong> {message['date']}<br>
+                <strong>From:</strong> {message['from']}<br>
+                <strong>To:</strong> {message['to']}
+            </div>
+            <div style="font-size: 14px; line-height: 1.6; margin-top: 5px; color: black; white-space: pre-wrap;">
+                {message['body'].replace('\n', '<br>')}
+            </div>
+        </div>
+        """
+        html = html_segment + html
+        indent_level -= 1
+
+    # Close the thread container
+    html += '</div>'
+
+    return html
+
+def convert_timestamp_for_email_thread_history(timestamp):
+    try:
+        dt = datetime.fromisoformat(timestamp)
+        dt = dt.astimezone(ct_timezone)
+        formatted_dt = dt.strftime('%a, %b %d, %Y at %I:%M %p')
+        return formatted_dt
+    except Exception as e:
+        return timestamp    
+  
