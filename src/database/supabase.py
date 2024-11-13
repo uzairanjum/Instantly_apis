@@ -85,6 +85,11 @@ class SupabaseClient():
     @retry(max_attempts=5, delay=2)
     def get_all_leads_last_contact(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
         return self.db.table(self.summary).select("lead_email , conversation").eq('last_contact', 'X').range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
+    
+
+    @retry(max_attempts=5, delay=2)
+    def get_all_interested_leads(self, campaign_id: str) -> Union[Dict, None]:
+        return self.db.table(self.summary).select("lead_email , conversation").eq('campaign_id', campaign_id).eq('status', 'Interested').neq("first_reply_after", 3).order('sent_date', desc=False).execute()
 
     @retry(max_attempts=5, delay=2)
     def update(self, row: dict, email: str)-> Union[Dict, None]:
@@ -110,3 +115,11 @@ class SupabaseClient():
         except Exception as e:
             logger.error(f"Error inserting many rows: {e}")
             return None
+        
+    @retry(max_attempts=5, delay=2)
+    def get_daily_cap(self ):
+        return self.db.table('cap').select("limit, count").execute()
+    
+
+    def cap_update(self, count: int):
+        return self.db.table('cap').update({"count": count}).eq('id', 1).execute()

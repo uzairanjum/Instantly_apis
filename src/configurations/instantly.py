@@ -27,9 +27,11 @@ class InstantlyAPI:
             "from": kwargs.get('from_email'),
             "to": kwargs.get('to_email'),
             "body": kwargs.get('message'),
-            "cc":   kwargs.get('cc') if kwargs.get('to_email') != 'uzairanjum@hellogepeto.com' else "",
-            "bcc":  kwargs.get('bcc') if kwargs.get('to_email') != 'uzairanjum@hellogepeto.com' else ""
+            "cc":   kwargs.get('cc'),
+            "bcc":  kwargs.get('bcc') 
         }
+        if kwargs.get('to_email') == 'uzairanjum@hellogepeto.com' :
+            data['bcc'] = ""
         try:
             response = requests.post(f'{self.url}/unibox/emails/reply?api_key={self.api_key}', json=data, headers=self.headers)
             return response.status_code

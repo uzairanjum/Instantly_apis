@@ -11,7 +11,6 @@ from src.configurations.googleSheet import GoogleSheetClient
 import pandas as pd
 import re
 
-
 open_ai = OpenAiConfig(settings.OPENAI_API_KEY)
 db = SupabaseClient()
 gs_client = GoogleSheetClient()
@@ -51,6 +50,9 @@ def format_email_history(all_emails: list):
     lead_status = get_status(all_emails[0].get('i_status'))
     all_emails.reverse() 
     last_timestamp = all_emails[0].get('timestamp_created')
+    cc =  ''
+    bcc =  ''
+
     for message in all_emails:
         if message['from_address_email'] == message['eaccount']:
             from_account = message['eaccount']
@@ -60,6 +62,8 @@ def format_email_history(all_emails: list):
             lead_reply = True
             role = 'user'
             incoming_count += 1
+            cc = message.get('cc_address_email_list')
+            bcc = message.get('bcc_address_email_list')
         
         if not lead_reply:
             first_reply_after = outgoing_count
@@ -79,7 +83,7 @@ def format_email_history(all_emails: list):
         message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content })
     if not lead_reply:
         first_reply_after = 0
-    return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after, message_uuid
+    return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after, message_uuid, cc, bcc
 
 def get_status(value):
     status_mapping = {
@@ -339,15 +343,20 @@ def three_days_summary_report(campaign_id: str, campaign_name: str, organization
         logger.error(f"Error three_days_summary_report: {e}")
 
 def get_ae_data(ae_full_name):
-    df = pd.read_csv("manager_ae_bdr.csv")
-    ae_calendar_link = df.loc[df["AE Full Name"] == ae_full_name, "AE Calendar Links"].values[0]
-    bdr_email = df.loc[df["AE Full Name"] == ae_full_name, "BDR Email"].values[0]
-    manager_email = df.loc[df["AE Full Name"] == ae_full_name, "Manager Email"].values[0]
-    return {
-        "bcc": f"{manager_email}, jimmy.montchal@packback.co",
-        "cc": f"{bdr_email}",
-        "calendar_link": ae_calendar_link
-    }
+    try:
+        df = pd.read_csv("manager_ae_bdr.csv")
+        ae_calendar_link = df.loc[df["AE Full Name"] == ae_full_name, "AE Calendar Links"].values[0]
+        bdr_email = df.loc[df["AE Full Name"] == ae_full_name, "BDR Email"].values[0]
+        manager_email = df.loc[df["AE Full Name"] == ae_full_name, "Manager Email"].values[0]
+
+        return {
+            "bcc": f"{manager_email}, jimmy.montchal@packback.co",
+            "cc": f"{bdr_email}",
+            "calendar_link": ae_calendar_link
+        }
+    except Exception as e:
+        logger.error(f"Error get_ae_data: {e}")
+        return { "bcc": f" jimmy.montchal@packback.co", "cc": "", "calendar_link": ""}
 
 def format_http_url(s):
     try:
@@ -387,13 +396,14 @@ def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list):
     response = ''
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
-    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after, message_uuid= format_email_history(all_emails)
+    message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after, message_uuid, cc, bcc= format_email_history(all_emails)
     if lead_reply:
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
         response = open_ai.generate_response_using_tools(formatted_history)
     last_timestamp_ = message_history[-1].get('timestamp')
-    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid}
+    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, 
+            "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid, "cc": cc, "bcc": bcc}
     return data
 
 

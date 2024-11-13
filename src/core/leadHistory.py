@@ -2,7 +2,7 @@ from src.configurations.instantly import InstantlyAPI
 from src.settings import settings
 from src.database.supabase import SupabaseClient
 from src.common.utils import get_lead_details_history, get_campaign_details, construct_email_body_from_history
-from src.core.responder import make_draft_email
+from src.core.responder import generate_ai_response
 from src.common.logger import get_logger
 from src.configurations.justcall import JustCallService
 from datetime import datetime
@@ -11,7 +11,7 @@ from pytz import timezone
 ct_timezone = timezone('US/Central')
 
 jc = JustCallService()
-
+import json
 db = SupabaseClient()
 logger = get_logger("LeadHistory")
 
@@ -25,7 +25,10 @@ class LeadHistory:
         lead_details = self.instantly.get_lead_details(lead = self.lead_email, campaign_id = self.campaign_id)
         if lead_details:
             lead_details = lead_details[0].get('lead_data')
-            return {"email" : lead_details.get('email'), "University Name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), "lead_last_name": lead_details.get('lastName')}
+            return {"email" : lead_details.get('email'), "university_name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), 
+                    "lead_last_name": lead_details.get('lastName'), "course_name": lead_details.get('Course Name'), "course_description": lead_details.get('Course Description'),
+                    "question_1" : lead_details.get('Question 1'), "question_2" : lead_details.get('Question 2'), "question_3" : lead_details.get('Question 3'), "question_4" : lead_details.get('Question 4')
+                    }
         return lead_details
 
     def get_lead_emails(self):
@@ -65,15 +68,33 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         data =  get_lead_details_history(lead_email, campaign_id, lead_emails)
         if data is None:
             return None
+    
         data['flag'] = flag
-        data['university_name'] = lead_history.get('University Name')
+        data['university_name'] = lead_history.get('university_name')
+
         if event =='reply_received' and data.get('status') == "Interested":
             logger.info("Interested lead - %s", lead_email)
             jc.send_message(f"New interested lead -\n\n Organization - {organization_name}\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
-            if organization_name == 'packback':
-                draft_email = make_draft_email (lead_history.get('AE') if lead_history.get('AE') else lead_history.get('CO'), lead_history.get('lead_last_name'), data.get('conversation'))
-                logger.info("Draft email - %s", draft_email)
-                data['draft_email'] = draft_email
+            cap = db.get_daily_cap().data[0]
+            count = cap.get('count')
+            limit = cap.get('limit')
+            logger.info("count :: %s", count)
+            logger.info("limit :: %s", limit)
+            if organization_name == 'packback' and not count >= limit:
+                logger.info("count not reached")    
+                logger.info("incoming :: %s", data.get('incoming'))
+                logger.info("outgoing :: %s", data.get('outgoing'))
+                if data.get('incoming') == 1 and data.get('outgoing') == 3:
+                    logger.info("forwarding email")
+                    forward_email_by_lead_email(lead_history, data, 'uzair@hellogepeto.com')
+                elif data.get('incoming') == 1 and data.get('outgoing') in [1,2]:
+                    logger.info("sending email")
+                    send_email_by_lead_email(lead_history, data)
+                else:
+                    logger.info("Need to check cc email if not cc'd then forward")
+                    send_email_by_lead_email_forwarding(lead_history, data)
+                db.cap_update(count + 1)
+    
         instantly_lead.save_lead_history(data)
         logger.info("lead email processed - %s :: %s", index, lead_email)
         return data
@@ -81,78 +102,133 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         logger.error(f"Error get_data_from_instantly: {e}")
         return None
     
-def send_email_by_lead_email(lead_email):
+def send_email_by_lead_email(lead_history,data):
     try:
-        email_data = db.get_by_email(lead_email).data
-        if len(email_data) == 0:
-            logger.info("No draft email data found for lead - %s", lead_email)
-            return False
-        if email_data[0].get('draft_email') == {}:
-            logger.info("Draft email data is empty for lead - %s", lead_email)
-            return False
-        email_data = email_data[0]
-        draft_email = email_data.get('draft_email')
-        from_account = email_data.get('from_account')
-        message_uuid = email_data.get('message_uuid')
-        campaign_id = email_data.get('campaign_id')
+        lead_email =  lead_history.get('email')
+        conversation =  data.get('conversation')
+        response = generate_ai_response (lead_history, conversation)
+
+
+        subject = response.get('subject')
+        content = response.get('content')
+        from_account = data.get('from_account')
+        campaign_id = data.get('campaign_id')
+        message_uuid =  data.get('message_uuid')
+        cc = response.get('cc')
+        bcc = response.get('bcc')
+
+        email_cc = data['cc']
+        email_bcc = data['bcc']
+
         _, _, instantly_api_key = get_campaign_details(campaign_id)
         instantly = InstantlyAPI(instantly_api_key)
+
+
+        logger.info("sending email to :: %s", lead_email)
+        logger.info("subject :: %s", subject)
+        logger.info("content :: %s", content)
+        logger.info("from_account :: %s", from_account)
+        logger.info("message_uuid :: %s", message_uuid)
+        logger.info("cc :: %s", cc)
+        logger.info("bcc :: %s", bcc)
+        logger.info("email_cc :: %s", email_cc)
+        logger.info("email_bcc :: %s", email_bcc)
+
+        logger.info("cc type :: %s", type(cc))
+        logger.info("bcc type :: %s", type(bcc))
+        logger.info("email_cc type :: %s", type(email_cc))
+        logger.info("email_bcc type :: %s", type(email_bcc))
+
+
+
+
         send = instantly.send_reply(
-            message=draft_email.get('content'),
+            message=content,
             from_email=from_account,
             to_email=lead_email,
             uuid=message_uuid,
-            subject=draft_email.get('subject'), 
-            cc=draft_email.get('cc'),
-            bcc=draft_email.get('bcc')
+            subject=subject, 
+            cc=cc,
+            bcc=response.get('bcc')
         )
         if send == 200:
             logger.info("Email sent successfully - %s", lead_email)
-            db.update({"draft_email": {}, "flag": False}, lead_email)
+            db.update({"flag": False}, lead_email)
         return True
     except Exception as e:
         logger.error("Error sending email - %s", e)
         return False
    
-def forward_email_by_lead_email(lead_email):
+def forward_email_by_lead_email(lead_history,data, forward_email):
     try:
-        email_data = db.get_by_email(lead_email).data
-        if len(email_data) == 0:
-            logger.info("No draft email data found for lead - %s", lead_email)
-            return False
-        
-        
-        conversation = email_data[0].get('conversation')
-        if conversation == []:
-            logger.info("Conversation data is empty for lead - %s", lead_email)
-            return False
-        email_data = email_data[0]
-        from_account = email_data.get('from_account')
-        message_uuid = email_data.get('message_uuid')
-        campaign_id = email_data.get('campaign_id')
-        _, _, instantly_api_key = get_campaign_details(campaign_id)
-        instantly = InstantlyAPI(instantly_api_key)
-        
+        logger.info("forwarding email to :: %s", forward_email)
+        lead_email = lead_history.get('email')
+        from_account = data.get('from_account')
+        campaign_id = data.get('campaign_id')
+        message_uuid =  data.get('message_uuid')
+        conversation = data.get('conversation')
+        subject = conversation[0].get('subject')
 
+        _, _, instantly_api_key = get_campaign_details(campaign_id)
+
+        instantly = InstantlyAPI(instantly_api_key)
         email_body = construct_email_body_from_history(conversation, lead_email, from_account)
 
+        
 
-        print("conversation[0].get('subject')",conversation[0].get('subject'))
+        logger.info("sending email to :: %s", lead_email)
+        logger.info("subject :: %s", subject)
+        logger.info("from_account :: %s", from_account)
+        logger.info("message_uuid :: %s", message_uuid)
         send = instantly.send_reply(
             message=email_body,
             from_email=from_account,
-            to_email='rajpoot.waryah@gmail.com',
+            to_email=forward_email,
             uuid=message_uuid,
-            subject=conversation[0].get('subject'), 
-    
+            subject=subject, 
         )
         if send == 200:
             logger.info("Email sent successfully - %s", lead_email)
-            db.update({"draft_email": {}, "flag": False}, lead_email)
+            db.update({"flag": False}, lead_email)
         return True
     except Exception as e:
         logger.error("Error sending email - %s", e)
         return False
     
 
+def send_email_by_lead_email_forwarding(lead_history,data):
+    try:
+        lead_email =  lead_history.get('email')
+        conversation =  data.get('conversation')
+        response = generate_ai_response (lead_history, conversation)
 
+
+        subject = response.get('subject')
+        content = response.get('content')
+        from_account = data.get('from_account')
+        message_uuid =  data.get('message_uuid')
+        cc = response.get('cc')
+        bcc = response.get('bcc')
+        email_cc = data['cc']
+        email_bcc = data['bcc']
+
+        logger.info("sending email to :: %s", lead_email)
+        logger.info("subject :: %s", subject)
+        logger.info("content :: %s", content)
+        logger.info("from_account :: %s", from_account)
+        logger.info("message_uuid :: %s", message_uuid)
+        logger.info("cc :: %s", cc)
+        logger.info("bcc :: %s", bcc)
+
+
+        if email_cc != cc:
+            return forward_email_by_lead_email(lead_history, data, cc)
+        
+        logger.info("No response :: ")
+        
+
+        return True
+    except Exception as e:
+        logger.error("Error sending email - %s", e)
+        return False
+   

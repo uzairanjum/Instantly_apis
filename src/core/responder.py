@@ -14,12 +14,13 @@ ct_timezone = timezone('America/Chicago')
 
 
 
-def make_draft_email(AE_name:str, last_name:str, previous_messages:list):
+def generate_ai_response(lead_history:dict, previous_messages:list):
     try:
+        AE_name = lead_history.get('AE') if lead_history.get('AE') else lead_history.get('CO')
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in previous_messages]
         ae_data = get_ae_data(AE_name)
         ae_first_name = AE_name.split(" ")[0]
-        prompt = responder_prompt.format(ae_first_name=ae_first_name, calendar_link=ae_data.get('calendar_link'), lead_last_name=last_name)
+        prompt = responder_prompt.format(**lead_history, ae_first_name=ae_first_name, calendar_link = ae_data.get('calendar_link'))
         formatted_history = [{"role": "system", "content": prompt}, *ai_message_history]
         response = open_ai.generate_response(formatted_history)
         response = format_http_url(response)
@@ -27,9 +28,9 @@ def make_draft_email(AE_name:str, last_name:str, previous_messages:list):
         return {
             "content": response,
             "role" :"draft",
-            "subject": previous_messages[-1].get('subject'),
-            "cc": ae_data.get('cc'), #string
-            "bcc": ae_data.get('bcc'), #string
+            "subject": previous_messages[0].get('subject'),
+            "cc": ae_data.get('cc'), 
+            "bcc": ae_data.get('bcc'),
             "timestamp": previous_messages[-1].get('timestamp')
         }  
     except Exception as e:
