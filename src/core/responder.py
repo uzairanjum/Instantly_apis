@@ -3,8 +3,7 @@ from src.common.logger import get_logger
 from src.common.utils import get_ae_data, format_http_url
 from src.configurations.llm import OpenAiConfig
 from src.settings import settings
-from src.common.prompts import responder_prompt
-from datetime import datetime
+from src.common.prompts import responder_prompt, questions_prompt
 from pytz import timezone
 
 open_ai = OpenAiConfig(settings.OPENAI_API_KEY)
@@ -37,6 +36,29 @@ def generate_ai_response(lead_history:dict, previous_messages:list):
         logger.error(f"Error make_draft_email: {e}")
         return {}
 
+def generate_questions_response(lead_history:dict, previous_messages:list):
+    try:
+        print(lead_history.get('course_description'))
+        AE_name = lead_history.get('AE') if lead_history.get('AE') else lead_history.get('CO')
+        # ai_message_history = [{"role": item["role"], "content": item["content"]} for item in previous_messages]
+        ae_data = get_ae_data(AE_name)
+        prompt = questions_prompt.format(**lead_history,)
+        formatted_history = [{"role": "system", "content": prompt}]
+        response = open_ai.generate_response(formatted_history)
+        print(response)
+        # response = format_http_url(response)
+        # response = response.replace('\n','<br>')
+        return {
+            "content": response,
+            "role" :"draft",
+            "subject": previous_messages[0].get('subject'),
+            "cc": ae_data.get('cc'), 
+            "bcc": ae_data.get('bcc'),
+            "timestamp": previous_messages[-1].get('timestamp')
+        }  
+    except Exception as e:
+        logger.error(f"Error make_draft_email: {e}")
+        return {}
 
 
 

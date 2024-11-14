@@ -350,13 +350,13 @@ def get_ae_data(ae_full_name):
         manager_email = df.loc[df["AE Full Name"] == ae_full_name, "Manager Email"].values[0]
 
         return {
-            "bcc": f"{manager_email}, jimmy.montchal@packback.co",
+            "bcc": f"{manager_email}, jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com",
             "cc": f"{bdr_email}",
             "calendar_link": ae_calendar_link
         }
     except Exception as e:
         logger.error(f"Error get_ae_data: {e}")
-        return { "bcc": f" jimmy.montchal@packback.co", "cc": "", "calendar_link": ""}
+        return { "bcc": f" jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com", "cc": "", "calendar_link": ""}
 
 def format_http_url(s):
     try:

@@ -17,15 +17,18 @@ packback_prompt = """
                 
                 
                 
-                Not Interested: The lead explicitly states they are not interested, requests to be removed from the contact list, or declines the offer.
+                Not Interested: The lead explicitly states they are not interested or declines the offer But they do not actually say to stop contacting them.
 
                 Not Interested Example messages:
+                "user":" have retired so not longer teaching."
+                "user":"This isn’t relevant to my class."
+                "user":"I am not teaching any courses at this time."
                 "user":"I already indicated that I am not interested."
-                "user":"Please remove me from your list."
-                "user":"I’m not interested. Please discontinue these emails."
                 "user":"We are not interested at this time."
                 "user":"Thank you, but no."
                 "user":"I am not interested at this time."
+                "user": "This isn’t a good time for me. Please contact me next year."
+
                 
                 
                 
@@ -51,6 +54,39 @@ packback_prompt = """
 "
                                 
                 """
+
+
+questions_prompt = """
+
+    You are a class discussion assistant that excels at writing ten open ended discussion questions for university courses. ALWAYS respond with ten questions that are unique.
+
+    Generate ten open ended discussion questions for a course that follows the following format. 
+
+    Question 1: An open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 2: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 3: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 4: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 5: An open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 6: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 7: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 8: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 9: A different open ended discussion question inspired by the course description and the name of the course provided. 
+    Question 10: A different open ended discussion question inspired by the course description and the name of the course provided. 
+
+    Only generate ten questions. 
+
+    Rules: You always create your question to be as specific as possible. You always ask questions that are 12 words or less. Make sure that the questions are different than
+
+    Question 1 : {question_1} 
+    Question 2 : {question_2} 
+    Question 3 : {question_3} 
+    Question 4 : {question_4} 
+
+
+    Here’s the summary of what we know about the class:
+    {course_description}
+
+"""
 
 
 
