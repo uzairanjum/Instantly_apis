@@ -20,10 +20,11 @@ response_tool = {
               "enum": [
                 "Interested",
                 "NotInterested",
-                "OutOfOffice"
+                "OutOfOffice",
+                "Unsubscribe"
               ],
               "type": "string",
-              "description": "intrested if lead is interested, not interested if lead is not interested, out of office if lead is out of office or leaves"
+              "description": "interested if lead is interested, not interested if lead is not interested, out of office if lead is out of office or leaves, unsubscribe if lead requests to be removed from the contact list"
             }
           }
         },

@@ -25,7 +25,7 @@ packback_prompt = """
                 "user":"I’m not interested. Please discontinue these emails."
                 "user":"We are not interested at this time."
                 "user":"Thank you, but no."
-                "user":""
+                "user":"I am not interested at this time."
                 
                 
                 
@@ -37,6 +37,18 @@ packback_prompt = """
                 "user":"I am out of the office at the ACCP annual meeting and will return on 10/16."
                 "user":"I am on sabbatical leave till the end of 2024."
                 Provide a concise classification output based on this analysis by selecting one of the following responses: Interested, Not Interested, or Out of Office.
+
+
+                Unsubscribe: The lead requests to be removed from the contact list.
+
+                Unsubscribe Example messages:
+                "user":"Please remove me from your list and discontinue with your multiple emails."
+                "user":"Thanks- please take me off your list. Thanks"
+                "user":"Please take me off the list."
+                "user":"With thanks, I'm not sure how much longer I'll be teaching at Yale before I graduate, so feel free to take me off your list. Best wishes,"
+                "user":"Please take me off your email list.  I've received too many e-mails and I'm not interested in what you're offering. "
+                "user":"not relevant for me-- but thanks.  good luck
+"
                                 
                 """
 
