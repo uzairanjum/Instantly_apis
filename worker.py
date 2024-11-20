@@ -27,7 +27,7 @@ instantly_queue = Queue("instantly_queue", connection=redis_config.redis)
 
 
 ##################################################################
-##############    function for type form paylaod   ###############
+##############    function for type form payload   ###############
 ##################################################################
 
 

@@ -1,19 +1,26 @@
 from src.configurations.instantly import InstantlyAPI
-from src.settings import settings
 from src.database.supabase import SupabaseClient
-from src.common.utils import get_lead_details_history, get_campaign_details, construct_email_body_from_history
-from src.core.responder import generate_ai_response, generate_questions_response
+from src.common.utils import get_lead_details_history, get_campaign_details, construct_email_body_from_history,validate_lead_last_reply
+from src.core.responder import generate_ai_response, generate_ai_response_for_third_reply
 from src.common.logger import get_logger
+from src.common.models import PackbackTenQuestionsRequest
 from src.configurations.justcall import JustCallService
-from datetime import datetime
 from pytz import timezone
+import requests
+import time
+import json
+from src.core.packback import PackbackConfig
+
+
 
 ct_timezone = timezone('US/Central')
+logger = get_logger("LeadHistory")
+
 
 jc = JustCallService()
-import json
 db = SupabaseClient()
-logger = get_logger("LeadHistory")
+packback_config = PackbackConfig()
+
 
 class LeadHistory:
     def __init__(self, lead_email, campaign_id, instantly_api_key):
@@ -26,9 +33,11 @@ class LeadHistory:
         if lead_details:
             lead_details = lead_details[0].get('lead_data')
             return {"email" : lead_details.get('email'), "university_name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), 
-                    "lead_last_name": lead_details.get('lastName'), "course_name": lead_details.get('Course Name'), "course_description": lead_details.get('Course Description'),
+                    "lead_last_name": lead_details.get('lastName'), "lead_first_name":lead_details.get('firstName'), "course_name": lead_details.get('Course Name'), "course_description": lead_details.get('Course Description'), "course_code":lead_details.get('FA24 Course Code'),
                     "question_1" : lead_details.get('Question 1'), "question_2" : lead_details.get('Question 2'), "question_3" : lead_details.get('Question 3'), "question_4" : lead_details.get('Question 4')
                     }
+        
+
         return lead_details
 
     def get_lead_emails(self):
@@ -58,6 +67,8 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
             return None
         instantly_lead = LeadHistory(lead_email, campaign_id, instantly_api_key)
         lead_history = instantly_lead.get_lead_details()
+
+        print(lead_history)
         if lead_history is None:
             return None
         logger.info("lead found :: %s", lead_email)
@@ -75,25 +86,36 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         if event =='reply_received' and data.get('status') == "Interested":
             logger.info("Interested lead - %s", lead_email)
             jc.send_message(f"New interested lead -\n\n Organization - {organization_name}\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
-            cap = db.get_daily_cap().data[0]
-            count = cap.get('count')
-            limit = cap.get('limit')
-            logger.info("count :: %s", count)
-            logger.info("limit :: %s", limit)
-            if organization_name == 'packback' and not count >= limit:
+            
+     
+            if organization_name == 'packback' :
                 logger.info("count not reached")    
                 logger.info("incoming :: %s", data.get('incoming'))
                 logger.info("outgoing :: %s", data.get('outgoing'))
+
+
+
                 if data.get('incoming') == 1 and data.get('outgoing') == 3:
+                    cap = db.get_daily_cap().data[0]
+                    count = cap.get('count')
+                    limit = cap.get('limit')
+                    logger.info("count :: %s", count)
+                    logger.info("limit :: %s", limit)
                     logger.info("forwarding email")
-                    forward_email_by_lead_email(lead_history, data, 'uzair@hellogepeto.com')
+                    if not count >= limit:
+                        third_outgoing_email(lead_history, data)
+                        db.cap_update(count + 1)
+                    else:
+                        logger.info("count reached")
+                        forward_email_by_lead_email(lead_history, data, 'uzair@hellogepeto.com')
+
                 elif data.get('incoming') == 1 and data.get('outgoing') in [1,2]:
                     logger.info("sending email")
                     send_email_by_lead_email(lead_history, data)
                 else:
                     logger.info("Need to check cc email if not cc'd then forward")
                     send_email_by_lead_email_forwarding(lead_history, data)
-                db.cap_update(count + 1)
+                
     
         instantly_lead.save_lead_history(data)
         logger.info("lead email processed - %s :: %s", index, lead_email)
@@ -102,6 +124,88 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         logger.error(f"Error get_data_from_instantly: {e}")
         return None
     
+def third_outgoing_email(lead_history, data):
+
+    conversation = data.get('conversation')
+    ten_question_prompt = validate_lead_last_reply(conversation)
+
+    logger.info("ten_question_prompt for lead - %s :: %s", lead_history.get('email'), ten_question_prompt)
+    if ten_question_prompt:
+        packback_response = packback_config.packback_ten_questions(PackbackTenQuestionsRequest(
+            course_code=lead_history.get('course_code', ''),
+            university_name=lead_history.get('university_name', ''),
+            professor_name=f"{lead_history.get('lead_first_name', '')} {lead_history.get('lead_last_name', '')}",
+            open_ai_model="gpt-4o-mini",
+            question1=lead_history.get('question_1', ''),
+            question2=lead_history.get('question_2', ''),
+            question3=lead_history.get('question_3', ''),
+            question4=lead_history.get('question_4', '')
+        ))
+ 
+        if packback_response:
+            questions = packback_response.questions
+            for idx in range(len(questions)):   
+                lead_history[f'q{idx + 1}'] = questions[idx].question if idx < len(questions) else ''
+            return send_email_for_third_reply(lead_history, data)
+        else:
+            logger.info("no response from search and crawl. Now forwarding email")
+            return forward_email_by_lead_email(lead_history,data, 'uzair@hellogepeto.com')
+    else:
+        logger.info("sending email to :: %s", lead_history.get('email'))
+        logger.info("no ten question prompt found")
+        return send_email_by_lead_email(lead_history,data)
+
+def send_email_for_third_reply(lead_history,data):
+    try:
+        lead_email =  lead_history.get('email')
+        conversation =  data.get('conversation')
+        conversation.pop()
+        response = generate_ai_response_for_third_reply (lead_history, conversation)
+
+
+        subject = response.get('subject')
+        content = response.get('content')
+        from_account = data.get('from_account')
+        campaign_id = data.get('campaign_id')
+        message_uuid =  data.get('message_uuid')
+        cc = response.get('cc')
+        bcc = response.get('bcc')
+
+        email_cc = data['cc']
+        email_bcc = data['bcc']
+
+        _, _, instantly_api_key = get_campaign_details(campaign_id)
+        instantly = InstantlyAPI(instantly_api_key)
+
+
+        logger.info("sending email to :: %s", lead_email)
+        logger.info("subject :: %s", subject)
+        logger.info("content :: %s", content)
+        logger.info("from_account :: %s", from_account)
+        logger.info("message_uuid :: %s", message_uuid)
+        logger.info("cc :: %s", cc)
+        logger.info("bcc :: %s", bcc)
+        logger.info("email_cc :: %s", email_cc)
+        logger.info("email_bcc :: %s", email_bcc)
+
+
+        send = instantly.send_reply(
+            message=content,
+            from_email=from_account,
+            to_email=lead_email,
+            uuid=message_uuid,
+            subject=subject, 
+            cc=cc,
+            bcc=bcc
+        )
+        if send == 200:
+            logger.info("Email sent successfully - %s", lead_email)
+            db.update({"flag": False}, lead_email)
+        return True
+    except Exception as e:
+        logger.error("Error sending email - %s", e)
+        return False
+   
 def send_email_by_lead_email(lead_history,data):
     try:
         lead_email =  lead_history.get('email')
@@ -144,7 +248,7 @@ def send_email_by_lead_email(lead_history,data):
             uuid=message_uuid,
             subject=subject, 
             cc=cc,
-            bcc=response.get('bcc')
+            bcc=bcc
         )
         if send == 200:
             logger.info("Email sent successfully - %s", lead_email)
@@ -154,7 +258,6 @@ def send_email_by_lead_email(lead_history,data):
         logger.error("Error sending email - %s", e)
         return False
    
-
 def send_email_by_lead_email_forwarding(lead_history,data):
     try:
         lead_email =  lead_history.get('email')
@@ -208,52 +311,3 @@ def forward_email_by_lead_email(lead_history,data, forward_email):
         return False
     
 
-# def generate_questions(lead_history, data):
-#     try:
-#         lead_email =  lead_history.get('email')
-#         conversation =  data.get('conversation')
-#         response = generate_questions_response (lead_history, conversation)
-
-
-#         subject = response.get('subject')
-#         content = response.get('content')
-#         # from_account = data.get('from_account')
-#         campaign_id = data.get('campaign_id')
-#         # message_uuid =  data.get('message_uuid')
-#         # cc = response.get('cc')
-#         # bcc = response.get('bcc')
-
-#         # email_cc = data['cc']
-#         # email_bcc = data['bcc']
-
-#         _, _, instantly_api_key = get_campaign_details(campaign_id)
-#         instantly = InstantlyAPI(instantly_api_key)
-
-
-#         logger.info("sending email to :: %s", lead_email)
-#         logger.info("subject :: %s", subject)
-#         logger.info("content :: %s", content)
-#         # logger.info("from_account :: %s", from_account)
-#         # logger.info("message_uuid :: %s", message_uuid)
-#         # logger.info("cc :: %s", cc)
-#         # logger.info("bcc :: %s", bcc)
-#         # logger.info("email_cc :: %s", email_cc)
-#         # logger.info("email_bcc :: %s", email_bcc)
-
-#         # send = instantly.send_reply(
-#         #     message=content,
-#         #     from_email=from_account,
-#         #     to_email=lead_email,
-#         #     uuid=message_uuid,
-#         #     subject=subject, 
-#         #     cc=cc,
-#         #     bcc=response.get('bcc')
-#         # )
-#         # if send == 200:
-#         #     logger.info("Email sent successfully - %s", lead_email)
-#         #     db.update({"flag": False}, lead_email)
-#         return True
-#     except Exception as e:
-#         logger.error("Error sending email - %s", e)
-#         return False
-   
