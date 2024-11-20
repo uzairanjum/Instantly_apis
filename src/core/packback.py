@@ -6,6 +6,7 @@ import requests
 from typing import Union
 from src.agent.fourQuestion import four_questions_agent
 from src.agent.tenQuestion import ten_questions_agent
+from src.settings import settings
 logger = get_logger("PACKBACK_CONFIG")
 import time
 
@@ -81,7 +82,7 @@ class PackbackConfig:
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url"
         attempts = 0
         headers = {
-            "x-api-key":"3f9d8b7c9b6a4d2a5f7e9d8b7",  
+            "x-api-key": settings.PACKBACK_API_KEY,  
             "Content-Type": "application/json" 
         }
         payload = {

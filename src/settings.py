@@ -16,6 +16,7 @@ class CommonSettings(BaseSettings):
     GOOGLE_CREDENTIALS: str = Field(..., env='GOOGLE_CREDENTIALS')
     JUSTCALL_API_KEY: str = Field(..., env='JUSTCALL_API_KEY')
     JUSTCALL_API_SECRET: str = Field(..., env='JUSTCALL_API_SECRET')
+    PACKBACK_API_KEY: str = Field(..., env='PACKBACK_API_KEY')
 
     
 
