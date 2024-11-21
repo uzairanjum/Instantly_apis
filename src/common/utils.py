@@ -235,20 +235,21 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
 
             worksheet = gs_client.open_sheet(csv_name, worksheet_name)
             all_csv_records = gs_client.get_all_records(worksheet)
-            dataframe = pd.DataFrame(all_csv_records)
+            df = pd.DataFrame(all_csv_records)
         
             for index , lead in enumerate(all_leads):
                 email_to_check = lead.get('lead_email')
                 logger.info(f" {index +1} :: {email_to_check}")
                 email_exists =None
                 if len(all_csv_records) >0:
-                    email_exists = email_to_check in dataframe['Email'].values  # Assuming 'lead_email' is the column name
+                    email_exists = email_to_check in df['Email'].values  # Assuming 'lead_email' is the column name
 
                 if email_exists:
                     logger.info(f"Email exists")
                     columns = ["Campaign Name", "Email", "School Name", "Sent Date","Last Contact","Outgoing","Incoming","Reply","Status","From Account","Inbox Status","First Reply After","Conversation URL"]
-                    values = [campaign_name, lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
-                    dataframe.loc[dataframe['Email'] == email_to_check, columns] = values  # Increment outgoing count
+                    values = [campaign_name, lead.get('lead_email'), lead.get('university_name'),lead.get('sent_date'),lead.get('last_contact'),lead.get('outgoing'),lead.get('incoming'),lead.get('reply'),
+                              lead.get('status'),lead.get('from_account'),lead.get('lead_status'),lead.get('first_reply_after'),lead.get('url')]
+                    df.loc[df['Email'] == email_to_check, columns] = values  # Increment outgoing count
                 else:
                     logger.info(f"Email not exists")
                     # Append a new row if the email does not exist
@@ -268,12 +269,12 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
                         "Conversation URL":lead.get('url')
                     }
                     new_row = pd.DataFrame([data])  # Convert dict to DataFrame
-                    dataframe = pd.concat([dataframe, new_row], ignore_index=True) 
+                    df = pd.concat([df, new_row], ignore_index=True) 
 
 
             # dataframe = dataframe.fillna('') 
-            dataframe = dataframe.infer_objects(copy=False)
-            gs_client.update_records(worksheet, dataframe)
+            df = df.infer_objects(copy=False)
+            gs_client.update_records(worksheet, df)
             leads_array.extend(all_leads)
             offset += limit 
 
@@ -351,11 +352,13 @@ def get_ae_data(ae_full_name):
         ae_calendar_link = df.loc[df["AE Full Name"] == ae_full_name, "AE Calendar Links"].values[0]
         bdr_email = df.loc[df["AE Full Name"] == ae_full_name, "BDR Email"].values[0]
         manager_email = df.loc[df["AE Full Name"] == ae_full_name, "Manager Email"].values[0]
+        bdr_name = df.loc[df["AE Full Name"] == ae_full_name, "BDR First Name"].values[0]
 
         return {
             "bcc": f"{manager_email}, jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com",
             "cc": f"{bdr_email}",
-            "calendar_link": ae_calendar_link
+            "calendar_link": ae_calendar_link,
+            "bdr_name":bdr_name.strip()
         }
     except Exception as e:
         logger.error(f"Error get_ae_data: {e}")
