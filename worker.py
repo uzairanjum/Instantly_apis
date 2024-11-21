@@ -39,6 +39,7 @@ def update_lead_details():
         
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
+            # all_leads = db.get_all_leads_by_campaign(offset=offset, limit=limit).data
 
             if len(all_leads) == 0: 
                 break
@@ -67,7 +68,7 @@ def update_daily_summary_report():
             all_campaigns = db.get_all_campaigns(organization_id).data
             for campaign in all_campaigns:
                 logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
-                # if campaign.get("campaign_id") in ["01ed88d3-e261-4026-b0a2-b65a2e100394", "612488c7-dc53-4bc6-a645-25fc5cb60b37" ] :
+                # if campaign.get("campaign_id") in ["ecdc673c-3d90-4427-a556-d39c8b69ae9f"] :
                 # if campaign.get("campaign_id") in ["ba6b3507-c26c-484e-a773-dd36a4c07b65", "dedbd915-f18a-4aaf-9ce5-89d2442be355", "25acb19a-ef31-4028-ade1-a0a822654007"] :
                 summary = Summary(campaign_id=campaign.get("campaign_id"))
                 summary.update_daily_summary()
@@ -115,7 +116,6 @@ except Exception as e:
 
 if __name__ == "__main__":
     try:
-        # update_lead_details()
         logger.info("scheduler is running")
         scheduler.add_job(update_lead_details, 'interval', hours=1)
 

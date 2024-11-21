@@ -230,6 +230,7 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
 
         while True:
             all_leads = db.get_flag_true_records(campaign_id, start_time, today,offset=offset, limit=limit).data
+            # all_leads = db.get_all_leads_by_campaign(offset=offset, limit=limit).data 
             if len(all_leads) == 0: 
                 break
 
@@ -255,24 +256,24 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
                     # Append a new row if the email does not exist
                     data = { 
                         "Campaign Name": campaign_name,
-                        "Email" :lead.get('lead_email'),
-                        "School Name": lead.get('university_name'),
-                        "Sent Date":lead.get('sent_date'),
-                        "Last Contact":lead.get('last_contact'),
-                        "Outgoing":lead.get('outgoing'),
-                        "Incoming":lead.get('incoming'),
-                        "Reply":lead.get('reply'),
-                        "Status" :lead.get('status'),
-                        "From Account":lead.get('from_account'),
-                        "Inbox Status":lead.get('lead_status'),
-                        "First Reply After":lead.get('first_reply_after'),
-                        "Conversation URL":lead.get('url')
+                        "Email" :(lead.get('lead_email') or ''),
+                        "School Name": (lead.get('university_name') or ''),
+                        "Sent Date":(lead.get('sent_date') or ''),
+                        "Last Contact":(lead.get('last_contact') or ''),
+                        "Outgoing":(lead.get('outgoing') or ''),
+                        "Incoming":(lead.get('incoming') or ''),
+                        "Reply":(lead.get('reply') or ''),
+                        "Status" :(lead.get('status') or ''),
+                        "From Account":(lead.get('from_account') or ''),
+                        "Inbox Status":(lead.get('lead_status') or ''),
+                        "First Reply After":(lead.get('first_reply_after') or ''),
+                        "Conversation URL":(lead.get('url') or '')
                     }
                     new_row = pd.DataFrame([data])  # Convert dict to DataFrame
                     df = pd.concat([df, new_row], ignore_index=True) 
 
 
-            # dataframe = dataframe.fillna('') 
+            # df = df.fillna('') 
             df = df.infer_objects(copy=False)
             gs_client.update_records(worksheet, df)
             leads_array.extend(all_leads)
