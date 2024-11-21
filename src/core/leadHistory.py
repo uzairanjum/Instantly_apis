@@ -96,19 +96,8 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
 
 
                 if data.get('incoming') == 1 and data.get('outgoing') == 3:
-                    cap = db.get_daily_cap().data[0]
-                    count = cap.get('count')
-                    limit = cap.get('limit')
-                    logger.info("count :: %s", count)
-                    logger.info("limit :: %s", limit)
-                    logger.info("forwarding email")
-                    if not count >= limit:
-                        third_outgoing_email(lead_history, data)
-                        db.cap_update(count + 1)
-                    else:
-                        logger.info("count reached")
-                        forward_email_by_lead_email(lead_history, data, 'uzair@hellogepeto.com')
-
+                    logger.info("third outgoing email")
+                    third_outgoing_email(lead_history, data)
                 elif data.get('incoming') == 1 and data.get('outgoing') in [1,2]:
                     logger.info("sending email")
                     send_email_by_lead_email(lead_history, data)
