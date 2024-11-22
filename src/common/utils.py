@@ -23,7 +23,7 @@ ct_timezone = pytz.timezone("US/Central")
 def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
     campaign_details = db.get_campaign_details(campaign_id)
     if campaign_details is None:
-        return None, None, None, None
+        return None, None, None
     campaign_name = campaign_details.data[0].get("campaign_name")
     organization_details = campaign_details.data[0].get("organizations")
     organization_name = organization_details.get('name')
@@ -381,22 +381,6 @@ def format_http_url(s):
     except Exception as e:
         return s
 
-# def get_lead_details_history_for_csv(lead_email: str, campaign_id: str, index: int):
-#     response = ''
-#     logger.info(f"Processing lead - {index + 1} - {lead_email} ")
-#     instantly = InstantlyAPI("hxfec34ac1m9z0nk0s96z1den868")
-#     all_emails = instantly.get_all_emails(lead=lead_email, campaign_id=campaign_id)
-#     if not all_emails:
-#         return None
-#     timestamp = datetime.now().isoformat()
-#     message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after, message_uuid= format_email_history(all_emails)
-#     if lead_reply:
-#         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
-#         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
-#         response = open_ai.generate_response_using_tools(formatted_history)
-#     last_timestamp_ = message_history[-1].get('timestamp')
-#     data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid, "flag":True}
-#     return data
 response_tool = {
   "tools": [
     {
@@ -438,13 +422,15 @@ def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list):
     response = ''
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
+    answer = ''
     message_history ,lead_reply, last_timestamp, from_email, incoming_count, outgoing_count ,lead_status, first_reply_after, message_uuid, cc, bcc= format_email_history(all_emails)
     if lead_reply:
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]
         formatted_history = [{"role": "system", "content": packback_prompt}, *ai_message_history]
         response = open_ai.generate_response_using_tools(all_messages= formatted_history, response_tool=response_tool)
+        answer = response.get('answer')
     last_timestamp_ = message_history[-1].get('timestamp')
-    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": response.get('answer'), "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, 
+    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": answer, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, 
             "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid, "cc": cc, "bcc": bcc}
     return data
 
