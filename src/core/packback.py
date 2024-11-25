@@ -106,7 +106,7 @@ class PackbackConfig:
         while attempts < max_attempts:
             try:
                 logger.info(f"Attempt {attempts + 1} to call {url}")
-                response = requests.post(url, json=payload, headers=headers, timeout=60)
+                response = requests.post(url, json=payload, headers=headers, timeout=300)
                 response.raise_for_status()  # Raise an exception for HTTP errors
 
                 logger.info(f"API call successful: {response.status_code}")
