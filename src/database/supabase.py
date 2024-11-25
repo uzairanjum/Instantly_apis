@@ -129,3 +129,8 @@ class SupabaseClient():
     def get_all_leads_by_campaign(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
         return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', 'ecdc673c-3d90-4427-a556-d39c8b69ae9f').eq('reply', True).range(offset, offset + limit - 1).order('sent_date', desc=False).execute()
     
+
+    @retry(max_attempts=5, delay=2)
+    def get_all_recycle_leads(self,campaign_id: str, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        return self.db.table(self.summary).select( "lead_email").eq('campaign_id',campaign_id).eq('reply', False).eq('outgoing', 3).eq('recycled', False).range(offset, offset + limit - 1).order('updated_at', desc=False).execute()
+    

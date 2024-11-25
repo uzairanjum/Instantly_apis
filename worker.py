@@ -100,6 +100,18 @@ def update_weekly_summary_report(organization_id):
     except Exception as e:
         logger.exception("Exception occurred update_weekly_summary_report %s", e)
 
+
+def recycle_leads():
+    try:
+        logger.info("recycle_leads is running")
+        for campaign_id in ["ecdc673c-3d90-4427-a556-d39c8b69ae9f"]:
+            logger.info(f"campaign_id {campaign_id}")
+            summary = Summary(campaign_id=campaign_id)
+            summary.notify_internally()
+    except Exception as e:
+        logger.exception("Exception occurred recycle_leads %s", e)
+
+
 ##################################################################
 ##### scheduler for  initial_message/follow_up/send_summary  #####
 ##################################################################
@@ -108,6 +120,7 @@ try:
     scheduler = BackgroundScheduler()
     cron_trigger_at_11_sun_pm = CronTrigger( hour=23, minute=0, second=0, day_of_week="sun", timezone=ct_timezone)
     cron_trigger_at_11_tue_pm = CronTrigger( hour=23, minute=0, second=0, day_of_week="tue", timezone=ct_timezone)
+    cron_trigger_at_11_pm_daily = CronTrigger( hour=23, minute=0, second=0, day_of_week="mon-sun", timezone=ct_timezone)
     
 except Exception as e:
     logger.error(f"Error: {e}")
@@ -126,6 +139,9 @@ if __name__ == "__main__":
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[2]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
+
+
+        scheduler.add_job(recycle_leads, cron_trigger_at_11_pm_daily)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()

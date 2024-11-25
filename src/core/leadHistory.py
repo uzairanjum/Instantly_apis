@@ -6,9 +6,6 @@ from src.common.logger import get_logger
 from src.common.models import PackbackTenQuestionsRequest
 from src.configurations.justcall import JustCallService
 from pytz import timezone
-import requests
-import time
-import json
 from src.core.packback import PackbackConfig
 
 
@@ -29,7 +26,7 @@ class LeadHistory:
         self.instantly = InstantlyAPI(instantly_api_key)
 
     def get_lead_details(self):
-        lead_details = self.instantly.get_lead_details(lead = self.lead_email, campaign_id = self.campaign_id)
+        lead_details = self.instantly.get_lead_details(lead_email = self.lead_email, campaign_id = self.campaign_id)
         if lead_details:
             lead_details = lead_details[0].get('lead_data')
             return {"email" : lead_details.get('email'), "university_name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), 
@@ -82,6 +79,7 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
     
         data['flag'] = flag
         data['university_name'] = lead_history.get('university_name')
+        data['recycled'] = False
 
         if event =='reply_received' and data.get('status') == "Interested":
             logger.info("Interested lead - %s", lead_email)

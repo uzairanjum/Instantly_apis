@@ -17,7 +17,6 @@ class JustCallService():
     def send_message(self, message):
         try:
             for send_to in ["+17372740771", "+17736206534", '+923369897217']:
-            # send_to:str = "+13372219750"
                 send_from:str = "+14156926240"
                 content:str = message
 
@@ -29,7 +28,7 @@ class JustCallService():
             return True
         except Exception as e:
             logger.exception("Exception in sending message justcall %s", e)    
-        return False
+            return False
     
     
 
