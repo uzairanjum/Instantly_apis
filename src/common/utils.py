@@ -549,14 +549,16 @@ def convert_timestamp_for_email_thread_history(timestamp):
   
 
 def calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens):
-    prompt_cost_per_1k = 0.15  # $0.15 per 1,000 prompt tokens
-    completion_cost_per_1k = 0.60  # $0.60 per 1,000 completion tokens
 
-    prompt_cost = (prompt_tokens / 1000) * prompt_cost_per_1k
-    completion_cost = (completion_tokens / 1000) * completion_cost_per_1k
 
-    total_cost = prompt_cost + completion_cost
+    input_cost_per_1m = 0.150  # Standard input tokens
+    output_cost_per_1m = 0.600  # Standard output tokens
+    input_cost = (prompt_tokens / 1000000) * input_cost_per_1m
+    output_cost = (completion_tokens / 1000000) * output_cost_per_1m
+    total_cost = input_cost + output_cost
+
     return total_cost
+
 
 
 def calculate_gpt4o_cost(prompt_tokens, completion_tokens):
