@@ -6,6 +6,7 @@ import requests
 from typing import Union
 from src.agent.fourQuestion import four_questions_agent
 from src.agent.tenQuestion import ten_questions_agent
+from src.agent.validateDescription import validate_description_agent
 from src.settings import settings
 from src.common.utils import calculate_gpt4o_mini_cost,calculate_gpt4o_cost
 logger = get_logger("PACKBACK_CONFIG")
@@ -93,17 +94,14 @@ class PackbackConfig:
                 if course_name and course_description:
                    logger.info(f"Course Name: {course_name}")
                    logger.info(f"Course Description: {course_description}")
-                #    validate_description_response = self.validate_course_description(request.course_code , course_description)
+                   validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model)
+                   if not validate_description_response:
+                       continue
                    return PackbackCourseDescriptionResponse(course_name=course_name, course_description=course_description, total_completion_tokens=response.get('total_completion_tokens'), total_prompt_tokens=response.get('total_prompt_tokens'), open_ai_model=request.open_ai_model)
         except Exception as e:
             logger.error(f"Error processing packback course description request: {e}")
             return None
     
-    def validate_course_description(self, course_code, university_name, course_description):
-
-        if course_description:
-            return True
-        return False
 
     def call_search_url_api(self, query, open_ai_model, max_attempts=2, retry_delay=3):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url"
@@ -123,7 +121,7 @@ class PackbackConfig:
                 {
                     "name": "course_description",
                     "type": "string",
-                    "description": "A detailed summary of the course, including its objectives, topics covered, prerequisites, and relevance to the curriculum."
+                    "description": "A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
                 }
             ],
             "maxIterations": 10,
