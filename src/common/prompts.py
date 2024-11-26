@@ -190,7 +190,7 @@ responder_prompt = """
         Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {bdr_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
 
 
-    Note : Please generate response in email format.
+    Note : Please generate response in email format and always use professor {lead_last_name} in the response.
 
 """
 
@@ -279,7 +279,7 @@ third_reply_prompt = """
         Packback
 
 
-    Note : Please generate response in email format and do not include any subject line or sender email in the response.
+    Note : Please generate response in email format and do not include any subject line or sender email in the response. and always use professor {lead_last_name} in the response.
 
 """
 
