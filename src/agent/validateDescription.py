@@ -66,8 +66,9 @@ def validate_description_agent(course_code, course_description, open_ai_model):
 
         
 
-        response = openai.generate_response_using_tools(messages=messages, model=open_ai_model, response_tool=validate_tool)
-        return trueOrFalse(response.get('answer'))
+        response = openai.generate_response_using_tools(all_messages=messages, model=open_ai_model, response_tool=validate_tool)
+        answer = trueOrFalse(response.get('answer'))
+        return answer
 
     except Exception as e:  
         logger.error(f"Error in validate description agent: {e}")  

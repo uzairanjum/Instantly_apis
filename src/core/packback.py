@@ -94,9 +94,9 @@ class PackbackConfig:
                 if course_name and course_description:
                    logger.info(f"Course Name: {course_name}")
                    logger.info(f"Course Description: {course_description}")
-                #    validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model)
-                #    if not validate_description_response:
-                #        continue
+                   validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model)
+                   if not validate_description_response:
+                       continue
                    return PackbackCourseDescriptionResponse(course_name=course_name, course_description=course_description, total_completion_tokens=response.get('total_completion_tokens'), total_prompt_tokens=response.get('total_prompt_tokens'), open_ai_model=request.open_ai_model)
         except Exception as e:
             logger.error(f"Error processing packback course description request: {e}")
