@@ -74,8 +74,8 @@ class PackbackConfig:
         try:
             query_templates = [
                 # f"{request.professor_name} {request.course_code} {request.university_name} syllabus course description",
-                f"{request.course_code} {request.university_name} syllabus course description",
-                f"{request.course_code} syllabus course description"
+                f"{request.course_code} {request.university_name} course outline and description",
+                f"{request.course_code} detailed syllabus and objectives"
             ]
             for idx, query in enumerate(query_templates):
                 response = self.call_search_url_api(query, request.open_ai_model)
@@ -93,10 +93,17 @@ class PackbackConfig:
                 if course_name and course_description:
                    logger.info(f"Course Name: {course_name}")
                    logger.info(f"Course Description: {course_description}")
+                #    validate_description_response = self.validate_course_description(request.course_code, request.university_name, course_description)
                    return PackbackCourseDescriptionResponse(course_name=course_name, course_description=course_description, total_completion_tokens=response.get('total_completion_tokens'), total_prompt_tokens=response.get('total_prompt_tokens'), open_ai_model=request.open_ai_model)
         except Exception as e:
             logger.error(f"Error processing packback course description request: {e}")
             return None
+    
+    def validate_course_description(self, course_code, university_name, course_description):
+
+        if course_description:
+            return True
+        return False
 
     def call_search_url_api(self, query, open_ai_model, max_attempts=2, retry_delay=3):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url"
@@ -111,12 +118,12 @@ class PackbackConfig:
                 {
                     "name": "course_name",
                     "type": "string",
-                    "description": "course name or course title?"
+                    "description": "The official name or title of the course as listed in the institution's catalog."
                 },
                 {
                     "name": "course_description",
                     "type": "string",
-                    "description": "detailed course description?"
+                    "description": "A detailed summary of the course, including its objectives, topics covered, prerequisites, and relevance to the curriculum."
                 }
             ],
             "maxIterations": 10,
