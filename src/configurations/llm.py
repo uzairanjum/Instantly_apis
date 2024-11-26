@@ -16,7 +16,9 @@ class OpenAiConfig():
     def generate_response(self, messages:list,model:str= "gpt-4o", max_tokens:int = 600, temperature:int = 0):
         try:
             response = self.client.chat.completions.create(model = model, messages = messages,  max_tokens = max_tokens, temperature = temperature)
-            return response.choices[0].message.content
+            completion_tokens = response.usage.completion_tokens
+            prompt_tokens = response.usage.prompt_tokens
+            return response.choices[0].message.content, completion_tokens, prompt_tokens
         except Exception as e:
             return False
         

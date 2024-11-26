@@ -38,10 +38,11 @@ def four_questions_agent(course_name, course_description, open_ai_model):
         
            
         try:
-            response = openai.generate_response(messages=messages, model=open_ai_model)
+            response, completion_tokens, prompt_tokens = openai.generate_response(messages=messages, model=open_ai_model)
+            print(f"completion_tokens: {completion_tokens}, prompt_tokens: {prompt_tokens}")
         except Exception as e:
             logger.error(f"Error in four_questions response agent: {e}")
-            return None
+            return None, 0, 0
 
 
         # Extract the questions from the response and structure them in the Pydantic model
@@ -52,8 +53,8 @@ def four_questions_agent(course_name, course_description, open_ai_model):
         ]
 
         # Return the Pydantic response model
-        return DiscussionQuestionsResponse(questions=questions)
+        return DiscussionQuestionsResponse(questions=questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens)
 
     except Exception as e:  
         logger.error(f"Error in four_questions_agent: {e}")  
-        return None
+        return None,0,0

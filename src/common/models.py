@@ -1,5 +1,5 @@
 # src/common/models.py
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 
 class CampaignSummary(BaseModel):
@@ -37,6 +37,8 @@ class DiscussionQuestion(BaseModel):
 
 class DiscussionQuestionsResponse(BaseModel):
     questions: List[DiscussionQuestion]
+    total_completion_tokens: Optional[int] = 0
+    total_prompt_tokens: Optional[int] = 0
 
 
 
@@ -53,6 +55,9 @@ class PackbackCourseQueryRequest(BaseModel):
 class PackbackCourseDescriptionResponse(BaseModel):
     course_name: str
     course_description: str
+    open_ai_model: str = "gpt-4o-mini"
+    total_completion_tokens: Optional[int] = 0
+    total_prompt_tokens: Optional[int] = 0
 
 class PackbackCourseDescriptionRequest(BaseModel):
     course_code: str
@@ -69,17 +74,15 @@ class PackbackTenQuestionsRequest(PackbackCourseDescriptionRequest):
 
 
 class PackbackCourseQuestionsResponse(PackbackCourseDescriptionResponse):
+    token_cost: str = 0.0
     questions: List[DiscussionQuestion]
 
-class QuestionGeneratorRequest(BaseModel):
-    course_name: str
-    course_description: str
+
+class QuestionGeneratorRequest(PackbackCourseDescriptionResponse):
     open_ai_model: str = "gpt-4o-mini"
 
 
-class TenQuestionsGeneratorRequest(BaseModel):
-    course_name: str
-    course_description: str
+class TenQuestionsGeneratorRequest(PackbackCourseDescriptionResponse):
     open_ai_model: str = "gpt-4o-mini"
     question1: str
     question2: str

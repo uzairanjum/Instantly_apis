@@ -48,10 +48,10 @@ def ten_questions_agent(course_name, course_description, question_1, question_2,
 
         
         try:
-            response = openai.generate_response(messages=messages, model=open_ai_model)
+            response ,completion_tokens, prompt_tokens= openai.generate_response(messages=messages, model=open_ai_model)
         except Exception as e:
             logger.error(f"Error in ten_questions response agent: {e}")
-            return None
+            return None, 0,0
 
         # Extract the questions from the response and structure them in the Pydantic model
         questions_text = response.strip().split('\n')
@@ -61,8 +61,8 @@ def ten_questions_agent(course_name, course_description, question_1, question_2,
         ]
 
         # Return the Pydantic response model
-        return DiscussionQuestionsResponse(questions=questions)
+        return DiscussionQuestionsResponse(questions=questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens)
 
     except Exception as e:  
         logger.error(f"Error in ten_questions_agent: {e}")  
-        return None
+        return None,0,0

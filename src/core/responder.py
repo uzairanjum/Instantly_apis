@@ -21,7 +21,7 @@ def generate_ai_response(lead_history:dict, previous_messages:list ):
         ae_first_name = AE_name.split(" ")[0]
         prompt = responder_prompt.format(**lead_history, ae_first_name=ae_first_name, bdr_name = ae_data.get('bdr_name'), calendar_link = ae_data.get('calendar_link'))
         formatted_history = [{"role": "system", "content": prompt}, *ai_message_history]
-        response = open_ai.generate_response(formatted_history)
+        response,_,_ = open_ai.generate_response(formatted_history)
         response = format_http_url(response)
         response = response.replace('\n','<br>')
         return {
@@ -44,7 +44,7 @@ def generate_ai_response_for_third_reply(lead_history:dict, previous_messages:li
         ae_first_name = AE_name.split(" ")[0]
         prompt = third_reply_prompt.format(**lead_history, ae_first_name=ae_first_name,  bdr_name = ae_data.get('bdr_name'),calendar_link = ae_data.get('calendar_link'))
         formatted_history = [{"role": "system", "content": prompt}, *ai_message_history]
-        response = open_ai.generate_response(formatted_history)
+        response,_,_ = open_ai.generate_response(formatted_history)
         response = format_http_url(response)
         response = response.replace('\n','<br>')
         return {
