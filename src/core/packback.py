@@ -116,7 +116,7 @@ class PackbackConfig:
                 {
                     "name": "course_name",
                     "type": "string",
-                    "description": "The official name or title of the course as listed in the institution's catalog."
+                    "description": "The official name or title of the course as listed in the institution's catalog(short name)."
                 },
                 {
                     "name": "course_description",
