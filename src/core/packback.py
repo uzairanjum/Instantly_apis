@@ -47,7 +47,7 @@ class PackbackConfig:
                     cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
                 elif request.open_ai_model == "gpt-4o":
                     cost = calculate_gpt4o_cost(prompt_tokens, completion_tokens)
-                return PackbackCourseQuestionsResponse(course_name=request.course_name, course_description=request.course_description, questions=questions_response.questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens, open_ai_model=request.open_ai_model, token_cost=f'${cost:.6f}')
+                return PackbackCourseQuestionsResponse(course_name=request.course_name, course_description=request.course_description, questions=questions_response.questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens, open_ai_model=request.open_ai_model, token_cost=f'${cost}')
         except Exception as e:
             logger.error(f"Error processing packback four questions request: {e}")
             return None  
@@ -66,7 +66,7 @@ class PackbackConfig:
                     cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
                 elif request.open_ai_model == "gpt-4o":
                     cost = calculate_gpt4o_cost(prompt_tokens, completion_tokens)
-                return PackbackCourseQuestionsResponse(course_name=request.course_name, course_description=request.course_description, questions=questions_response.questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens, open_ai_model=request.open_ai_model, token_cost=f'${cost:.6f}')
+                return PackbackCourseQuestionsResponse(course_name=request.course_name, course_description=request.course_description, questions=questions_response.questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens, open_ai_model=request.open_ai_model, token_cost=f'${cost}')
         except Exception as e:
             logger.error(f"Error processing packback ten questions request: {e}")
             return None   
