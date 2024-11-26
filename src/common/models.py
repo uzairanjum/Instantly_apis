@@ -43,8 +43,6 @@ class DiscussionQuestionsResponse(BaseModel):
 
 class ValidateDescriptionResponse(BaseModel):
     course_description: str
-    total_completion_tokens: Optional[int] = 0
-    total_prompt_tokens: Optional[int] = 0
 
 
 
