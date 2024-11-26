@@ -77,7 +77,7 @@ class PackbackTenQuestionsRequest(PackbackCourseDescriptionRequest):
 
 
 class PackbackCourseQuestionsResponse(PackbackCourseDescriptionResponse):
-    token_cost: str = 0.0
+    token_cost: str = "$0.0"
     questions: List[DiscussionQuestion]
 
 
