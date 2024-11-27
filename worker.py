@@ -153,7 +153,7 @@ if __name__ == "__main__":
 
         scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
         scheduler.add_job(three_days_summary_report, 'interval', hours=12)
-        scheduler.add_job(packback_lead_course, 'interval', hours=15)
+        scheduler.add_job(packback_lead_course, 'interval', minutes=15)
 
 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
