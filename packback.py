@@ -33,7 +33,7 @@ if __name__ == "__main__":
     try:
         scheduler = BackgroundScheduler()
         logger.info("packback scheduler is running")
-        scheduler.add_job(process_csv_with_concurrency, 'interval', hours=1)
+        scheduler.add_job(process_csv_with_concurrency, 'interval', hours=3)
         scheduler.start()
         while True:
             pass
