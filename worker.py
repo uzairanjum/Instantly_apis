@@ -3,13 +3,11 @@ import time
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.core.leadHistory import get_data_from_instantly
-from src.common.utils import get_last_three_days_start_and_end_of_day
 from src.common.logger import get_logger
 from src.database.supabase import SupabaseClient
 from src.database.redis import RedisConfig
 import concurrent.futures
 from rq import Queue, Worker
-from packback_csv import process_csv_concurrent
 from src.core.summary import Summary
 
 
@@ -113,21 +111,7 @@ def recycle_leads():
 
 
 
-##################################################################
-##############   function for packback lead course  ##############
-##################################################################
 
-
-def packback_lead_course():
-    try:
-        logger.info("packback_lead_course is running")
-
-        process_csv_concurrent()
-
-        logger.info("packback_lead_course is completed")
-
-    except Exception as e:
-        logger.exception("Exception occurred packback_lead_course %s", e)
 
 
 
@@ -153,9 +137,6 @@ if __name__ == "__main__":
 
         scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
         scheduler.add_job(three_days_summary_report, 'interval', hours=12)
-        scheduler.add_job(packback_lead_course, 'interval', minutes=15)
-
-
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[2]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 

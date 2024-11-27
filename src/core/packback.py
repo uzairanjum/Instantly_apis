@@ -92,8 +92,6 @@ class PackbackConfig:
                     elif objective.get('objective') == "course_description":
                         course_description = objective.get('value')
                 if course_name and course_description:
-                   logger.info(f"Course Name: {course_name}")
-                   logger.info(f"Course Description: {course_description}")
                    validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model)
                    if not validate_description_response:
                        continue

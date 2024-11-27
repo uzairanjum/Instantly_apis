@@ -60,6 +60,7 @@ def process_row(row, index):
 
 def process_csv_concurrent():
     try:    
+        logger.info("process_csv_concurrent is running")
         input_file = 'packback_new.csv'
         batch_size = 10
 
