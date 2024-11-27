@@ -80,7 +80,7 @@ class PackbackConfig:
             ]
             for idx, query in enumerate(query_templates):
                 response = self.call_search_url_api(query, request.open_ai_model)
-                logger.info(f"response :: {idx+1} ------------->>>: {response}")
+                logger.info(f"response :: {idx+1}")
                 if not response:
                     continue
                 course_name = None

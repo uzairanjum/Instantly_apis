@@ -9,7 +9,7 @@ from src.database.supabase import SupabaseClient
 from src.database.redis import RedisConfig
 import concurrent.futures
 from rq import Queue, Worker
-
+from packback_csv import process_csv_concurrent
 from src.core.summary import Summary
 
 
@@ -112,6 +112,25 @@ def recycle_leads():
         logger.exception("Exception occurred recycle_leads %s", e)
 
 
+
+##################################################################
+##############   function for packback lead course  ##############
+##################################################################
+
+
+def packback_lead_course():
+    try:
+        logger.info("packback_lead_course is running")
+
+        process_csv_concurrent()
+
+        logger.info("packback_lead_course is completed")
+
+    except Exception as e:
+        logger.exception("Exception occurred packback_lead_course %s", e)
+
+
+
 ##################################################################
 ##### scheduler for  initial_message/follow_up/send_summary  #####
 ##################################################################
@@ -134,6 +153,7 @@ if __name__ == "__main__":
 
         scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
         scheduler.add_job(three_days_summary_report, 'interval', hours=12)
+        scheduler.add_job(packback_lead_course, 'interval', hours=15)
 
 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 

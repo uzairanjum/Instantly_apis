@@ -46,6 +46,15 @@ class SupabaseClient():
     def insert(self, row: dict)-> Union[Dict, None]:
         return self.db.table(self.summary).insert([row]).execute()
     
+
+    @retry(max_attempts=3, delay=2)
+    def insert_packback_data(self, row: dict)-> Union[Dict, None]:
+        try:
+            return self.db.table('leads').insert([row]).execute()
+        except Exception as e:
+            logger.error(f"Error inserting packback data: {e}")
+            return None
+    
     @retry(max_attempts=5, delay=2)
     def get(self, email: str)-> Union[Dict, None]:
         return self.db.table(self.summary).select("lead_email").eq('lead_email', email).execute()
@@ -117,12 +126,15 @@ class SupabaseClient():
             return None
         
     @retry(max_attempts=5, delay=2)
-    def get_daily_cap(self ):
-        return self.db.table('cap').select("limit, count").execute()
+    def get_offset(self ):
+        return self.db.table('cap').select("limit, offset").execute()
     
 
-    def cap_update(self, count: int):
-        return self.db.table('cap').update({"count": count}).eq('id', 1).execute()
+    def update_offset(self, offset: int):
+        return self.db.table('cap').update({"offset": offset}).eq('id', 1).execute()
+    
+
+
 
 
     @retry(max_attempts=5, delay=2)
