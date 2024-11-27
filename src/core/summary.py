@@ -103,7 +103,7 @@ class Summary:
             elif not_yet_contacts <= lower_value:
                 jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads")
                 logger.info(f"send message and start recycling leads for {campaign_name}")
-                recycle_leads_from_db(self.campaign_id)
+                # recycle_leads_from_db(self.campaign_id)
         except Exception as e:
             logger.error(f"Error notify_internally: {e}")
 
