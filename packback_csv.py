@@ -80,7 +80,7 @@ def process_csv_concurrent():
             for start in range(start_row, end_row, batch_size):
                 end = min(start + batch_size, end_row)
                 batch = rows[start:end]
-                with ThreadPoolExecutor(max_workers=3) as executor:
+                with ThreadPoolExecutor(max_workers=5) as executor:
                     futures = {executor.submit(process_row, row, index): row for index, row in enumerate(batch, start=start)}
                     for future in as_completed(futures):
                         result = future.result()
