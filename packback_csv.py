@@ -133,7 +133,7 @@ def process_csv_with_concurrency():
 
                 print(f"Processed batch {start // batch_size + 1} of {(end_row - start_row) // batch_size + 1}")
                 time.sleep(1)
-        # db.update_offset(offset + limit)
+        db.update_offset(offset + limit)
     except Exception as e:
         logger.exception("Exception occurred process_csv_concurrent %s", e)
 
