@@ -7,6 +7,7 @@ from src.common.models import PackbackTenQuestionsRequest
 from src.configurations.justcall import JustCallService
 from pytz import timezone
 from src.core.packback import PackbackConfig
+from src.core.havocSheild import HavocShieldForwarder
 
 
 
@@ -31,7 +32,7 @@ class LeadHistory:
             lead_details = lead_details[0].get('lead_data')
             return {"email" : lead_details.get('email'), "university_name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), 
                     "lead_last_name": lead_details.get('lastName'), "lead_first_name":lead_details.get('firstName'), "course_name": lead_details.get('Course Name'), "course_description": lead_details.get('Course Description'), "course_code":lead_details.get('FA24 Course Code'),
-                    "question_1" : lead_details.get('Question 1'), "question_2" : lead_details.get('Question 2'), "question_3" : lead_details.get('Question 3'), "question_4" : lead_details.get('Question 4')
+                    "question_1" : lead_details.get('Question 1'), "question_2" : lead_details.get('Question 2'), "question_3" : lead_details.get('Question 3'), "question_4" : lead_details.get('Question 4'), "linkedin_url": lead_details.get('LinkedIn Profile')
                     }
         
 
@@ -102,7 +103,10 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
                 else:
                     logger.info("Need to check cc email if not cc'd then forward")
                     send_email_by_lead_email_forwarding(lead_history, data)
-                
+            
+            if organization_name == 'havocshield':
+                logger.info("havocshield lead")
+                HavocShieldForwarder().forward_email(lead_history, data)
     
         instantly_lead.save_lead_history(data)
         logger.info("lead email processed - %s :: %s", index, lead_email)
