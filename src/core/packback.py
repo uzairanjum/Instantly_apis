@@ -9,6 +9,8 @@ from src.agent.tenQuestion import ten_questions_agent
 from src.agent.validateDescription import validate_description_agent
 from src.settings import settings
 from src.common.utils import calculate_gpt4o_mini_cost,calculate_gpt4o_cost
+from src.configurations.instructor import ExtractOpenAI
+
 logger = get_logger("PACKBACK_CONFIG")
 import time
 
@@ -87,10 +89,14 @@ class PackbackConfig:
                 course_description = None
 
                 for objective in response.get('completedObjectives'):
-                    if objective.get('objective') == "course_name":
-                        course_name = objective.get('value')
-                    elif objective.get('objective') == "course_description":
-                        course_description = objective.get('value')
+                    if objective.get('objective') == "course_information":
+                        print("objective.get('value')",objective.get('value'))
+                        course_information = ExtractOpenAI().extract_data(objective.get('value'))
+                        print("course_information",course_information)
+                        course_name = course_information.get('course_name')
+                        course_description = course_information.get('course_description')
+                        break
+
                 if course_name and course_description:
                    validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model)
                    if not validate_description_response:
@@ -101,7 +107,7 @@ class PackbackConfig:
             return None
     
 
-    def call_search_url_api(self, query, open_ai_model, max_attempts=2, retry_delay=3):
+    def call_search_url_api(self, query, open_ai_model, max_attempts=1, retry_delay=2):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url"
         attempts = 0
         headers = {
@@ -112,17 +118,12 @@ class PackbackConfig:
             "searchStatement": query,
             "objectives": [
                 {
-                    "name": "course_name",
+                    "name": "course_information",
                     "type": "string",
-                    "description": "The official name or title of the course as listed in the institution's catalog(short name)."
-                },
-                {
-                    "name": "course_description",
-                    "type": "string",
-                    "description": "A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
+                    "description": "The official name or title of the course and the course code and A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
                 }
             ],
-            "maxIterations": 10,
+            "maxIterations": 1,
             "verboseMode": False,
             "open_ai_model": open_ai_model
 
