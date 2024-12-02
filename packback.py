@@ -33,7 +33,7 @@ if __name__ == "__main__":
     try:
         scheduler = BackgroundScheduler()
         logger.info("packback scheduler is running")
-        scheduler.add_job(packback_lead_course, 'interval', minutes=15)
+        # scheduler.add_job(packback_lead_course, 'interval', minutes=15)
         scheduler.start()
         while True:
             pass
