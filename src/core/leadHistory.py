@@ -94,10 +94,10 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
 
 
 
-                if data.get('incoming') == 1 and data.get('outgoing') == 3:
+                if data.get('incoming') == 1 and data.get('outgoing') in [3,6,9]:
                     logger.info("third outgoing email")
                     third_outgoing_email(lead_history, data)
-                elif data.get('incoming') == 1 and data.get('outgoing') in [1,2]:
+                elif data.get('incoming') == 1 and data.get('outgoing') in [1,2,4,5,7,8]:
                     logger.info("sending email")
                     send_email_by_lead_email(lead_history, data)
                 else:
