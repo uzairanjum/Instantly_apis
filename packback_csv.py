@@ -80,7 +80,7 @@ def process_csv_with_concurrency():
             end_row = min(end_row, total_rows)
 
             # Process rows concurrently using ThreadPoolExecutor
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {
                     executor.submit(process_row, row, index): index
                     for index, row in enumerate(rows[start_row:end_row], start=start_row)
