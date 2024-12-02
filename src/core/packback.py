@@ -120,7 +120,7 @@ class PackbackConfig:
                 {
                 "name": "course_information",
                 "type": "string",
-                "description": "a course title or name and a detailed summary of the course, including its objectives, topics covered, and relevance to the curriculum."
+                "description": "detailed course description and summary"
                 }
             ],
             "maxIterations": 1,
