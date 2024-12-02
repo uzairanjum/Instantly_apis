@@ -118,9 +118,9 @@ class PackbackConfig:
             "searchStatement": query,
             "objectives": [
                 {
-                    "name": "course_information",
-                    "type": "string",
-                    "description": "The official name or title of the course and the course code and A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
+                "name": "course_information",
+                "type": "string",
+                "description": "a course title or name and a detailed summary of the course, including its objectives, topics covered, and relevance to the curriculum."
                 }
             ],
             "maxIterations": 1,
