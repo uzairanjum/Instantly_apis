@@ -85,11 +85,10 @@ class PackbackConfig:
                 course_description = None
 
                 for objective in response.get('completedObjectives'):
-                    if objective.get('objective') == "course_information":
-                        course_information = ExtractOpenAI().extract_data(objective.get('value'))
-                        logger.info(f"course_information :: {course_information}")
-                        course_name = course_information.get('course_name')
-                        course_description = course_information.get('course_description')
+                    if objective.get('objective') == "course_name":
+                        course_name = objective.get('value')
+                    elif objective.get('objective') == "course_description":
+                        course_description = objective.get('value')
                         break
 
                 if course_name and course_description:
@@ -113,11 +112,16 @@ class PackbackConfig:
         payload = {
             "searchStatement": query,
             "objectives": [
-                {
-                "name": "course_information",
-                "type": "string",
-                "description": "detailed course description and summary"
-                }
+                   {
+                    "name": "course_name",
+                    "type": "string",
+                    "description": "The official name or title of the course as listed in the institution's catalog(short name)."
+                    },
+                    {
+                    "name": "course_description",
+                    "type": "string",
+                    "description": "A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
+                    }
             ],
             "maxIterations": 1,
             "verboseMode": False,
