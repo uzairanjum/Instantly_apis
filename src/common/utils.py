@@ -363,7 +363,7 @@ def get_ae_data(ae_full_name):
         }
     except Exception as e:
         logger.error(f"Error get_ae_data: {e}")
-        return { "bcc": f" jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com", "cc": "", "calendar_link": ""}
+        return { "bcc": f" jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com", "cc": "", "calendar_link": "", "bdr_name":""}
 
 def format_http_url(s):
     try:
