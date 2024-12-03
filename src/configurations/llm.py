@@ -13,7 +13,7 @@ class OpenAiConfig():
 
         self.client = OpenAI(api_key = settings.OPENAI_API_KEY ,max_retries = 3)
 
-    def generate_response(self, messages:list,model:str= "gpt-4o", max_tokens:int = 600, temperature:int = 0):
+    def generate_response(self, messages:list,model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0):
         try:
             response = self.client.chat.completions.create(model = model, messages = messages,  max_tokens = max_tokens, temperature = temperature)
             completion_tokens = response.usage.completion_tokens
@@ -22,7 +22,7 @@ class OpenAiConfig():
         except Exception as e:
             return False
         
-    def generate_response_using_tools(self,all_messages: list, model:str= "gpt-4o", max_tokens:int = 600, temperature:int = 0, response_tool:dict = {}):
+    def generate_response_using_tools(self,all_messages: list, model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0, response_tool:dict = {}):
         try:
             response = self.client.chat.completions.create(model=model ,messages=all_messages, temperature=temperature, max_tokens=max_tokens,tools=response_tool.get('tools'),tool_choice=response_tool.get('tool_choice'))
       

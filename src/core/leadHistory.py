@@ -3,7 +3,7 @@ from src.database.supabase import SupabaseClient
 from src.common.utils import get_lead_details_history, get_campaign_details, construct_email_body_from_history,validate_lead_last_reply
 from src.core.responder import generate_ai_response, generate_ai_response_for_third_reply
 from src.common.logger import get_logger
-from src.common.models import PackbackTenQuestionsRequest
+from src.common.models import PackbackTenQuestionsRequest,TenQuestionsGeneratorRequest
 from src.configurations.justcall import JustCallService
 from pytz import timezone
 from src.core.packback import PackbackConfig
@@ -30,9 +30,21 @@ class LeadHistory:
         lead_details = self.instantly.get_lead_details(lead_email = self.lead_email, campaign_id = self.campaign_id)
         if lead_details:
             lead_details = lead_details[0].get('lead_data')
-            return {"email" : lead_details.get('email'), "university_name" : lead_details.get('University Name'), "AE" : lead_details.get('AE'), "CO":lead_details.get('Contact Owner: Full Name'), 
-                    "lead_last_name": lead_details.get('lastName'), "lead_first_name":lead_details.get('firstName'), "course_name": lead_details.get('Course Name'), "course_description": lead_details.get('Course Description'), "course_code":lead_details.get('FA24 Course Code'),
-                    "question_1" : lead_details.get('Question 1'), "question_2" : lead_details.get('Question 2'), "question_3" : lead_details.get('Question 3'), "question_4" : lead_details.get('Question 4'), "linkedin_url": lead_details.get('LinkedIn Profile')
+            return {
+                    "email" : lead_details.get('email'), 
+                    "university_name" : lead_details.get('University Name'),
+                    "AE" : lead_details.get('AE'), 
+                    "CO":lead_details.get('Contact Owner: Full Name'), 
+                    "lead_last_name": lead_details.get('lastName'), 
+                    "lead_first_name":lead_details.get('firstName'),
+                    "course_name": lead_details.get('Course Name'), 
+                    "course_description": lead_details.get('Course Description'), 
+                    "course_code":lead_details.get('Course Code') if lead_details.get('Course Code') else lead_details.get('FA24 Course Code'),
+                    "question_1" : lead_details.get('Question 1'), 
+                    "question_2" : lead_details.get('Question 2'),
+                    "question_3" : lead_details.get('Question 3'),
+                    "question_4" : lead_details.get('Question 4'),
+                    "linkedin_url": lead_details.get('LinkedIn Profile')
                     }
         
 
@@ -117,34 +129,46 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
     
 def third_outgoing_email(lead_history, data):
 
-    conversation = data.get('conversation')
-    ten_question_prompt = validate_lead_last_reply(conversation)
+    try:
+        conversation = data.get('conversation')
+        ten_question_prompt = validate_lead_last_reply(conversation)
+        packback_response = None
 
-    logger.info("ten_question_prompt for lead - %s :: %s", lead_history.get('email'), ten_question_prompt)
-    if ten_question_prompt:
-        packback_response = packback_config.packback_ten_questions(PackbackTenQuestionsRequest(
-            course_code=lead_history.get('course_code', ''),
-            university_name=lead_history.get('university_name', ''),
-            professor_name=f"{lead_history.get('lead_first_name', '')} {lead_history.get('lead_last_name', '')}",
-            open_ai_model="gpt-4o-mini",
-            question1=lead_history.get('question_1', ''),
-            question2=lead_history.get('question_2', ''),
-            question3=lead_history.get('question_3', ''),
-            question4=lead_history.get('question_4', '')
-        ))
- 
-        if packback_response:
-            questions = packback_response.questions
-            for idx in range(len(questions)):   
-                lead_history[f'q{idx + 1}'] = questions[idx].question if idx < len(questions) else ''
-            return send_email_for_third_reply(lead_history, data)
+        logger.info("ten_question_prompt for lead - %s :: %s", lead_history.get('email'), ten_question_prompt)
+        if not ten_question_prompt:
+            logger.info("sending email to :: %s", lead_history.get('email'))
+            logger.info("no ten question prompt found")
+            return send_email_by_lead_email(lead_history,data)
+
+        if lead_history.get('course_description') is None:
+                packback_response = packback_config.packback_ten_questions(PackbackTenQuestionsRequest(
+                course_code=lead_history.get('course_code', ''),
+                university_name=lead_history.get('university_name', ''),
+                professor_name=f"{lead_history.get('lead_first_name', '')} {lead_history.get('lead_last_name', '')}",
+                open_ai_model="gpt-4o-mini",
+                question1=lead_history.get('question_1', ''),
+                question2=lead_history.get('question_2', ''),
+                question3=lead_history.get('question_3', ''),
+                question4=lead_history.get('question_4', '')
+            ))
         else:
+            packback_response = packback_config.ten_questions_generator(TenQuestionsGeneratorRequest(course_name=lead_history.get('course_name'), \
+                course_description=lead_history.get('course_description'), open_ai_model="gpt-4o-mini", \
+                question1=lead_history.get('question_1'), question2=lead_history.get('question_2'), question3=lead_history.get('question_3'), question4=lead_history.get('question_4')))
+            
+        if packback_response is None:
             logger.info("no response from search and crawl. Now forwarding email")
             return forward_email_by_lead_email(lead_history,data, 'uzair@hellogepeto.com')
-    else:
-        logger.info("sending email to :: %s", lead_history.get('email'))
-        logger.info("no ten question prompt found")
-        return send_email_by_lead_email(lead_history,data)
+    
+        questions = packback_response.questions
+        for idx in range(len(questions)):   
+            lead_history[f'q{idx + 1}'] = questions[idx].question if idx < len(questions) else ''
+        return send_email_for_third_reply(lead_history, data)
+    except Exception as e:
+        logger.error("Error in third_outgoing_email - %s", e)
+        return False
+            
+        
 
 def send_email_for_third_reply(lead_history,data):
     try:

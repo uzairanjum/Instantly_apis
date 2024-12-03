@@ -47,8 +47,6 @@ class PackbackConfig:
                 cost = 0
                 if request.open_ai_model == "gpt-4o-mini":
                     cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
-                elif request.open_ai_model == "gpt-4o":
-                    cost = calculate_gpt4o_cost(prompt_tokens, completion_tokens)
                 return PackbackCourseQuestionsResponse(course_name=request.course_name, course_description=request.course_description, questions=questions_response.questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens, open_ai_model=request.open_ai_model, token_cost=f'${cost}')
         except Exception as e:
             logger.error(f"Error processing packback four questions request: {e}")
@@ -66,8 +64,6 @@ class PackbackConfig:
                 cost = 0
                 if request.open_ai_model == "gpt-4o-mini":
                     cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
-                elif request.open_ai_model == "gpt-4o":
-                    cost = calculate_gpt4o_cost(prompt_tokens, completion_tokens)
                 return PackbackCourseQuestionsResponse(course_name=request.course_name, course_description=request.course_description, questions=questions_response.questions, total_completion_tokens=completion_tokens, total_prompt_tokens=prompt_tokens, open_ai_model=request.open_ai_model, token_cost=f'${cost}')
         except Exception as e:
             logger.error(f"Error processing packback ten questions request: {e}")
@@ -90,9 +86,8 @@ class PackbackConfig:
 
                 for objective in response.get('completedObjectives'):
                     if objective.get('objective') == "course_information":
-                        print("objective.get('value')",objective.get('value'))
                         course_information = ExtractOpenAI().extract_data(objective.get('value'))
-                        print("course_information",course_information)
+                        logger.info(f"course_information :: {course_information}")
                         course_name = course_information.get('course_name')
                         course_description = course_information.get('course_description')
                         break
@@ -109,6 +104,7 @@ class PackbackConfig:
 
     def call_search_url_api(self, query, open_ai_model, max_attempts=1, retry_delay=2):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url"
+        # url = "http://127.0.0.1:7000/gepeto/search-url"
         attempts = 0
         headers = {
             "x-api-key": settings.PACKBACK_API_KEY,  
