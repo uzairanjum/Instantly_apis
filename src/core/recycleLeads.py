@@ -65,8 +65,8 @@ class RecycleLeads:
             logger.info("Recycled leads count: %s", len(recycled_leads))
             logger.info("Deleted leads count: %s", len(deleted_leads))
             if len(deleted_leads) == len(recycled_leads):
-                self.instantly .delete_lead_from_campaign(lead_list=deleted_leads, campaign_id=self.campaign_id)
-                self.instantly .add_lead_to_campaign(lead_list=recycled_leads, campaign_id=self.campaign_id)
+                self.instantly.delete_lead_from_campaign(lead_list=deleted_leads, campaign_id=self.campaign_id)
+                self.instantly.add_lead_to_campaign(lead_list=recycled_leads, campaign_id=self.campaign_id)
        
         except Exception as e:
             logger.error(f"Error in recycle_leads: {e}")

@@ -89,7 +89,7 @@ def process_csv_with_concurrency():
             end_row = min(end_row, total_rows)
 
             # Process rows concurrently using ThreadPoolExecutor
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {}
                 call_count = 0  # Counter to track how many calls have been submitted
 
@@ -98,7 +98,7 @@ def process_csv_with_concurrency():
                     call_count += 1
                     
                     # Sleep for 3 seconds after every 3 calls
-                    if call_count % 3 == 0:
+                    if call_count % 5 == 0:
                         logger.info("Sleeping for 3 seconds to avoid too many concurrent calls...")
                         time.sleep(3)
 
