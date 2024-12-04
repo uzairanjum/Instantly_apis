@@ -33,10 +33,14 @@ if __name__ == "__main__":
     try:
         scheduler = BackgroundScheduler()
         logger.info("packback scheduler is running")
-        # scheduler.add_job(packback_lead_course, 'interval', minutes=5)
+        scheduler.add_job(packback_lead_course, 'interval', minutes=10)
         scheduler.start()
-        while True:
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
             pass
+
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
  

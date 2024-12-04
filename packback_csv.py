@@ -21,6 +21,9 @@ def process_row(row, index):
     lastName = row['lastName']
     courseCode = row['Course Code']
     universityName = row['University Name']
+    ae = row['AE']
+
+
 
     body = {
         "course_code": courseCode or '',
@@ -29,7 +32,7 @@ def process_row(row, index):
         "open_ai_model": "gpt-4o-mini"
     }       
     result = packback_config.packback_four_questions(PackbackCourseDescriptionRequest(**body))
-    logger.info(f"result :: {result}")
+    logger.info(f"result from packback_four_questions :: {result}")
 
     try:
         if result:
@@ -52,6 +55,8 @@ def process_row(row, index):
                 'promptTokens': prompt_tokens,
                 'completionTokens': completion_tokens,
                 'tokenCost': cost,
+                'ae': ae,
+
             }
         else:
             return None
@@ -62,7 +67,7 @@ def process_row(row, index):
 def process_csv_with_concurrency():
     try:
         logger.info("process_csv_with_concurrency is running")
-        input_file = 'packback_new.csv'
+        input_file = 'packback_leads.csv'
 
         # Get offset and limit from the database
         cap = db.get_offset().data[0]
@@ -80,7 +85,7 @@ def process_csv_with_concurrency():
             end_row = min(end_row, total_rows)
 
             # Process rows concurrently using ThreadPoolExecutor
-            with ThreadPoolExecutor(max_workers=5) as executor:
+            with ThreadPoolExecutor(max_workers=3) as executor:
                 futures = {
                     executor.submit(process_row, row, index): index
                     for index, row in enumerate(rows[start_row:end_row], start=start_row)

@@ -103,7 +103,7 @@ class PackbackConfig:
 
     def call_search_url_api(self, query, open_ai_model, max_attempts=1, retry_delay=1):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url-v2"
-        # url = "http://127.0.0.1:7000/gepeto/search-url"
+        # url = "http://127.0.0.1:8000/gepeto/search-url-v2"
         attempts = 0
         headers = {
             "x-api-key": settings.PACKBACK_API_KEY,  
