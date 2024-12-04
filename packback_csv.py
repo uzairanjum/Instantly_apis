@@ -19,7 +19,7 @@ def process_row(row, index):
     email = row['Email']
     firstName = row['firstName']
     lastName = row['lastName']
-    courseCode = row['Course Code']
+    courseCode = row['CourseCode']
     universityName = row['University Name']
     ae = row['AE']
 
