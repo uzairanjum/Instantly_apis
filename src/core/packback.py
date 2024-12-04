@@ -73,7 +73,7 @@ class PackbackConfig:
         try:
             query_templates = [
                 # f"{request.professor_name} {request.course_code} {request.university_name} syllabus course description",
-                f" {request.university_name}:{request.course_code} course outline and description",
+                f"{request.course_code} {request.university_name} course outline and description",
                 f"{request.course_code} detailed syllabus and objectives"
             ]
             for idx, query in enumerate(query_templates):
@@ -123,7 +123,7 @@ class PackbackConfig:
                     "description": "A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
                     }
             ],
-            "maxIterations": 1,
+            "maxIterations": 2,
             "verboseMode": False,
             "open_ai_model": open_ai_model
 
