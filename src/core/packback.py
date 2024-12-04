@@ -73,7 +73,7 @@ class PackbackConfig:
         try:
             query_templates = [
                 # f"{request.professor_name} {request.course_code} {request.university_name} syllabus course description",
-                f"{request.course_code} {request.university_name} course outline and description",
+                f" {request.university_name}:{request.course_code} course outline and description",
                 f"{request.course_code} detailed syllabus and objectives"
             ]
             for idx, query in enumerate(query_templates):
@@ -101,7 +101,7 @@ class PackbackConfig:
             return None
     
 
-    def call_search_url_api(self, query, open_ai_model, max_attempts=1, retry_delay=2):
+    def call_search_url_api(self, query, open_ai_model, max_attempts=1, retry_delay=1):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url-v2"
         # url = "http://127.0.0.1:7000/gepeto/search-url"
         attempts = 0
@@ -123,7 +123,7 @@ class PackbackConfig:
                     "description": "A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
                     }
             ],
-            "maxIterations": 1,
+            "maxIterations": 2,
             "verboseMode": False,
             "open_ai_model": open_ai_model
 
@@ -132,7 +132,7 @@ class PackbackConfig:
         while attempts < max_attempts:
             try:
                 logger.info(f"Attempt {attempts + 1} to call {url}")
-                response = requests.post(url, json=payload, headers=headers, timeout=300)
+                response = requests.post(url, json=payload, headers=headers, timeout=600)
                 response.raise_for_status()  # Raise an exception for HTTP errors
 
                 logger.info(f"API call successful: {response.status_code}")
