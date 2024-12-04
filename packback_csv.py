@@ -64,6 +64,10 @@ def process_row(row, index):
         print(f"Failed to process row with email: {email}. Error: {e}")
         return None
 
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import csv
+
 def process_csv_with_concurrency():
     try:
         logger.info("process_csv_with_concurrency is running")
@@ -86,10 +90,19 @@ def process_csv_with_concurrency():
 
             # Process rows concurrently using ThreadPoolExecutor
             with ThreadPoolExecutor(max_workers=3) as executor:
-                futures = {
-                    executor.submit(process_row, row, index): index
-                    for index, row in enumerate(rows[start_row:end_row], start=start_row)
-                }
+                futures = {}
+                call_count = 0  # Counter to track how many calls have been submitted
+
+                for index, row in enumerate(rows[start_row:end_row], start=start_row):
+                    futures[executor.submit(process_row, row, index)] = index
+                    call_count += 1
+                    
+                    # Sleep for 3 seconds after every 3 calls
+                    if call_count % 3 == 0:
+                        logger.info("Sleeping for 3 seconds to avoid too many concurrent calls...")
+                        time.sleep(3)
+
+                # Wait for all futures to complete
                 for future in as_completed(futures):
                     try:
                         result = future.result()
@@ -104,6 +117,7 @@ def process_csv_with_concurrency():
         logger.info(f"Processing completed for rows {start_row} to {end_row}")
     except Exception as e:
         logger.exception("Exception occurred in process_csv_with_concurrency: %s", e)
+
 
 # # process_csv_with_concurrency()
 

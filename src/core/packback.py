@@ -123,7 +123,7 @@ class PackbackConfig:
                     "description": "A detailed summary of the course, including its objectives, topics covered and relevance to the curriculum."
                     }
             ],
-            "maxIterations": 2,
+            "maxIterations": 1,
             "verboseMode": False,
             "open_ai_model": open_ai_model
 
