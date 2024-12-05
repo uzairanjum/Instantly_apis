@@ -99,8 +99,7 @@ def process_csv_with_concurrency():
                     
                     # Sleep for 3 seconds after every 3 calls
                     if call_count % 5 == 0:
-                        logger.info("Sleeping for 3 seconds to avoid too many concurrent calls...")
-                        time.sleep(3)
+                        time.sleep(1)
 
                 # Wait for all futures to complete
                 for future in as_completed(futures):

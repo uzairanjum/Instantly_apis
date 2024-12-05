@@ -84,6 +84,9 @@ class PackbackConfig:
                 course_name = None
                 course_description = None
 
+                if not response.get('completedObjectives'):
+                    continue
+
                 for objective in response.get('completedObjectives'):
                     if objective.get('objective') == "course_name":
                         course_name = objective.get('value')
