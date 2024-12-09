@@ -9,3 +9,4 @@ rq
 gspread
 pandas
 instructor
+pymongo

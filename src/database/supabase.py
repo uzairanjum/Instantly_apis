@@ -146,3 +146,18 @@ class SupabaseClient():
     def get_all_recycle_leads(self,campaign_id: str, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
         return self.db.table(self.summary).select( "lead_email").eq('campaign_id',campaign_id).eq('reply', False).eq('outgoing', 3).eq('recycled', False).range(offset, offset + limit - 1).order('updated_at', desc=False).execute()
     
+
+    @retry(max_attempts=3, delay=2)
+    def get_all_recycle_leads_v2(self, campaign_id: str, last_updated_at, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        try:
+            return self.db.table(self.summary).select("id, lead_email, updated_at") \
+                .eq('campaign_id', campaign_id) \
+                .eq('reply', False).in_('outgoing', [3,6,9]) \
+                .eq('recycled', False) \
+                .lte('updated_at', last_updated_at) \
+                .range(offset, offset + limit - 1) \
+                .order('updated_at', desc=False) \
+                .execute()
+        except Exception as e:
+            logger.error(f"Error getting all recycle leads: {e}")
+            return None

@@ -17,7 +17,7 @@ class CommonSettings(BaseSettings):
     JUSTCALL_API_KEY: str = Field(..., env='JUSTCALL_API_KEY')
     JUSTCALL_API_SECRET: str = Field(..., env='JUSTCALL_API_SECRET')
     PACKBACK_API_KEY: str = Field(..., env='PACKBACK_API_KEY')
-
+    MONGODB_URI: str = Field(..., env='MONGODB_URI')
     
 
     class Config:
