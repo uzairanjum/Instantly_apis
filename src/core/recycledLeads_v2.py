@@ -52,9 +52,11 @@ class RecycledLeadsV2:
                 "custom_variables": instantly_lead.get('lead_data')
             }
             self.insert_leads_into_mongodb(new_lead)
-            db.update(lead.get('id'), {'recycled': True})
-
+            db.update({'recycled': True}, lead.get('lead_email'))
             restored_leads.append(lead.get('lead_email'))
-
             logger.info(f"Lead {lead.get('lead_email')} restored successfully")
+
+        self.instantly.delete_lead_from_campaign(lead_list=restored_leads, campaign_id=self.campaign_id)
+        
+        
 

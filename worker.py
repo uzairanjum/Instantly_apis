@@ -9,7 +9,7 @@ from src.database.redis import RedisConfig
 import concurrent.futures
 from rq import Queue, Worker
 from src.core.summary import Summary
-
+from src.core.restoreLeads import restore_leads_from_db
 
 
 
@@ -112,7 +112,14 @@ def recycle_leads():
 
 
 
-
+def restore_leads():
+    try:
+        logger.info("restore_leads is running")
+        for campaign_id in ["ecdc673c-3d90-4427-a556-d39c8b69ae9f"]:
+            logger.info(f"campaign_id {campaign_id}")
+            restore_leads_from_db(campaign_id)
+    except Exception as e:
+        logger.exception("Exception occurred restore_leads %s", e)
 
 
 ##################################################################
@@ -141,8 +148,10 @@ if __name__ == "__main__":
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[2]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
 
+        scheduler.add_job(restore_leads, 'interval', hours=1)
 
-        scheduler.add_job(recycle_leads, cron_trigger_at_11_pm_daily)
+
+        # scheduler.add_job(recycle_leads, cron_trigger_at_11_pm_daily)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()
