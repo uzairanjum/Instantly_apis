@@ -41,9 +41,7 @@ class HavocShieldForwarder:
             logger.info("message_uuid :: %s", message_uuid)
             logger.info("linkedin_url :: %s", linkedin_url)
             send = instantly.send_reply(
-                message="""\n\n
-                Interested Lead: {lead_email}\n
-                LinkedIn Profile: {linkedin_url}""",
+                message=f"\n\n Interested Lead: {lead_email}\n LinkedIn Profile: {linkedin_url}",
                 from_email=from_account,
                 to_email=self.to_email,
                 uuid=message_uuid,
