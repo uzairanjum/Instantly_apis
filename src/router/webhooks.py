@@ -45,3 +45,17 @@ def send_email(request:dict):
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
 
+
+@instantly_webhook_router.post('/test-redis')
+def test_redis(request:dict):
+    try:    
+
+        lead_email = request.get('lead_email')
+        logger.info("Test redis webhook  - %s ", lead_email)
+        instantly_queue.enqueue(test_redis_queue, lead_email)
+    finally:
+        return JSONResponse(content={"status": "success"}, status_code=200)
+
+def test_redis_queue(lead_email):
+    logger.info("Redis queue working - %s ", lead_email)
+    
