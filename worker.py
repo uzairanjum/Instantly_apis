@@ -148,7 +148,7 @@ if __name__ == "__main__":
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[2]) 
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
 
-        scheduler.add_job(restore_leads, 'interval', hours=1)
+        # scheduler.add_job(restore_leads, 'interval', hours=1)
 
 
         # scheduler.add_job(recycle_leads, cron_trigger_at_11_pm_daily)
