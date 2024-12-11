@@ -75,7 +75,7 @@ class RestoreLeads:
                         lead = future_to_lead[future]
                         logger.error(f"Error in processing lead {lead.get('lead_email')}: {e}")
             logger.info("Restored leads count: %s", len(restored_leads))
-            if len(restored_leads) == len(all_leads):
+            if len(restored_leads) > 0 :
                 logger.info(f"Deleting leads from campaign {self.campaign_id}")
                 self.instantly.delete_lead_from_campaign(lead_list=restored_leads, campaign_id=self.campaign_id)
        
@@ -94,7 +94,7 @@ def restore_leads_from_db(campaign_id):
         logger.info(f"total_leads {total_leads}")
         _, _, instantly_api_key = get_campaign_details(campaign_id)
         offset = 0
-        limit = 1000
+        limit = 100
 
         # while True:
         last_updated_at = datetime.now() - timedelta(days=15)

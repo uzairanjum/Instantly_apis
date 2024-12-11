@@ -19,9 +19,18 @@ class MongoDBClient:
         """Get documents from the recycled_leads collection based on a query."""
         return self.collection.find_one({'email': email})
     
-    def get_all_from_recycled_leads(self):
-        """Get all documents from the recycled_leads collection sorted by updated_At in ascending order."""
-        return self.collection.find().sort('updated_at', 1)  
+    def get_all_from_recycled_leads(self, offset=0, limit=100):
+        print(f"offset {offset}")
+        print(f"limit {limit}")
+        """Get all documents from the recycled_leads collection sorted by updated_at in ascending order.
+        
+        Args:
+            offset (int): The number of documents to skip.
+            limit (int): The maximum number of documents to return. If 0, returns all documents.
+        """
+        query = self.collection.find().sort('updated_at', 1).skip(offset).limit(limit)
+
+        return query
 
     def update_by_email(self, email, update_fields):
         """Update a document in the recycled_leads collection based on email."""
