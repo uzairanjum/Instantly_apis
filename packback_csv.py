@@ -49,7 +49,7 @@ def process_row(row, index):
                 'courseName': new_courseName,
                 'firstName': firstName,
                 'lastName': lastName,
-                'University Name': universityName,
+                'universityName': universityName,
                 'courseDescription': new_courseDescription,
                 'question1': new_questions[0] if len(new_questions) > 0 else '',
                 'question2': new_questions[1] if len(new_questions) > 1 else '',
