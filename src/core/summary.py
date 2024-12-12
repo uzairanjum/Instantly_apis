@@ -5,7 +5,8 @@ from src.configurations.instantly import InstantlyAPI
 from src.common.utils import update_daily_summary_report, update_weekly_summary_report, three_days_summary_report,get_campaign_details, get_csv_details
 from src.common.enum import SummaryType
 from src.configurations.justcall import JustCallService
-from src.core.recycleLeads import recycle_leads_from_db
+from src.core.uploadLeads import added_leads_to_campaign
+
 logger = get_logger("Summary")
 db = SupabaseClient()
 
@@ -98,12 +99,12 @@ class Summary:
             logger.info(f"send email to the team for {campaign_name}")
             
             if not_yet_contacts >= higher_value and not_yet_contacts <= lower_value:
-                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts}")
+                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts}\n\nPlease approved these leads : https://packback-leads-fe.vercel.app/")
                 logger.info(f"send message total leads not yer contacted for {campaign_name}")
             elif not_yet_contacts <= lower_value:
                 jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads")
                 logger.info(f"send message and start recycling leads for {campaign_name}")
-                # recycle_leads_from_db(self.campaign_id)
+                # added_leads_to_campaign(self.campaign_id)
         except Exception as e:
             logger.error(f"Error notify_internally: {e}")
 

@@ -117,13 +117,7 @@ class SupabaseClient():
         logger.info("get_flag_true_records %s - %s ", campaign_id, last_date)
         return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).gte('last_contact', last_date).eq('flag', True).range(offset, offset + limit - 1).execute()
     
-    @retry(max_attempts=5, delay=2)
-    def insert_many(self, rows: list)-> Union[Dict, None]:
-        try:
-            return self.db.table(self.summary).insert(rows).execute()
-        except Exception as e:
-            logger.error(f"Error inserting many rows: {e}")
-            return None
+    
         
     @retry(max_attempts=5, delay=2)
     def get_offset(self ):
@@ -160,4 +154,33 @@ class SupabaseClient():
                 .execute()
         except Exception as e:
             logger.error(f"Error getting all recycle leads: {e}")
+            return None
+        
+    @retry(max_attempts=5, delay=2)
+    def get_new_enriched_leads(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        return self.db.table('leads').select("*").eq('downloaded', False).eq('approved', True).range(offset, offset + limit - 1).order('id', desc=False).execute()
+    
+    @retry(max_attempts=5, delay=2)
+    def update_new_enrich_leads(self, row, email) -> Union[Dict, None]:
+        try:
+            return self.db.table('leads').update([row]).eq('email', email).execute()
+        except Exception as e:
+            logger.error(f"Error updating new enriched leads: {e}")
+            return None
+        
+    @retry(max_attempts=5, delay=2)
+    def get_status_false(self)-> Union[Dict, None]:
+        return self.db.table(self.domain_health).select("*").eq("status", False).execute()
+
+    @retry(max_attempts=5, delay=2)
+    def update_by_mailboxId(self, row: dict, mailboxId: str)-> Union[Dict, None]:
+        return self.db.table(self.domain_health).update(row).eq('mailboxId', mailboxId).execute()
+    
+
+    @retry(max_attempts=5, delay=2)
+    def insert_many(self, rows: list)-> Union[Dict, None]:
+        try:
+            return self.db.table(self.domain_health).insert(rows).execute()
+        except Exception as e:
+            logger.error(f"Error inserting many rows: {e}")
             return None

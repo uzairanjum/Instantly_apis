@@ -482,16 +482,6 @@ def validate_lead_last_reply(message_history: list):
 def trueOrFalse(value:str):
     return True if value == "yes" else False
 
-def insert_many_domain_health(result: list):
-    try:
-        insertion = db.insert_many('domain_health', result)
-        print(f"insert_many_domain_health: {insertion}")
-        return True
-    except Exception as e:
-        logger.error(f"Error insert_many_domain_health: {e}")
-        return False
-    
-
 
 def construct_email_body_from_history(messages:list, lead_email:str, account_email:str):
     html = '<div style="font-family: Arial, sans-serif; color: #202124; max-width: 600px; margin: auto; background-color: #f1f3f4; padding: 20px; border-radius: 8px;">'
