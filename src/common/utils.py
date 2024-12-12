@@ -22,7 +22,7 @@ ct_timezone = pytz.timezone("US/Central")
 
 def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
     campaign_details = db.get_campaign_details(campaign_id)
-    if campaign_details is None:
+    if len(campaign_details.data) == 0:
         return None, None, None
     campaign_name = campaign_details.data[0].get("campaign_name")
     organization_details = campaign_details.data[0].get("organizations")
@@ -83,7 +83,7 @@ def format_email_history(all_emails: list):
             else:
                 content = ''
         
-        message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content })
+        message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content, "cc": cc, "bcc": bcc })
     if not lead_reply:
         first_reply_after = 0
     return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after, message_uuid, cc, bcc
@@ -511,7 +511,9 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
         data.append({
             "from": from_account,
             "to": to_account,
-            "body": message['content'],
+            "body": message.get('content'),
+            "cc": message.get('cc') or '',
+            "bcc": message.get('bcc') or '',
             "date": convert_timestamp_for_email_thread_history(message['timestamp']),
         })
 
@@ -523,7 +525,9 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
             <div style="color: #5f6368; font-size: 12px; margin-bottom: 8px;">
                 <strong>Date:</strong> {message['date']}<br>
                 <strong>From:</strong> {message['from']}<br>
-                <strong>To:</strong> {message['to']}
+                <strong>To:</strong> {message['to']}<br>
+                <strong>Cc:</strong> {message['cc']}<br>
+                <strong>Bcc:</strong> {message['bcc']}
             </div>
             <div style="font-size: 14px; line-height: 1.6; margin-top: 5px; color: black; white-space: pre-wrap;">
                 {message['body'].replace('\n', '<br>')}
