@@ -166,7 +166,9 @@ class SupabaseClient():
             return self.db.table('leads').update([row]).eq('email', email).execute()
         except Exception as e:
             logger.error(f"Error updating new enriched leads: {e}")
-            return None
+            time.sleep(1)
+            logger.info(f"Retrying update_new_enrich_leads for {email}")
+            return self.db.table('leads').update([row]).eq('email', email).execute()
         
     @retry(max_attempts=5, delay=2)
     def get_status_false(self)-> Union[Dict, None]:

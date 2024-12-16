@@ -35,33 +35,35 @@ class UploadLeads:
             
             
             while offset < total_leads:
-                new_leads_email = []
+                restored_leads = []
                 restore_leads = []
 
                 # Get all the leads from the mongodb and add to the restore_leads list
                 leads = mongodb_client.get_all_from_recycled_leads(offset,limit)
                 for lead in leads:
                     restore_leads.append({"email": lead.get('email'), "custom_variables": lead.get('custom_variables')})
-                    new_leads_email.append(lead.get('email'))
+                    restored_leads.append(lead.get('email'))
 
                 
 
-                logger.info(f"new_leads_email {new_leads_email}")
-                logger.info(f"restore_leads {restore_leads}")
+                    total_count += 1
+                    if total_count >= total_leads:
+                        break
 
-                if len(new_leads_email) == 0:
-                    break
+                logger.info(f"restored_leads emails {restored_leads}")
+                logger.info(f"restore_leads {len(restore_leads)}")
+                logger.info(f"total_count for restoration {total_count}")
 
 
                 # Modification for instantly api
-                self.instantly.delete_lead_from_campaign(lead_list=new_leads_email, campaign_id=self.campaign_id)
+                self.instantly.delete_lead_from_campaign(lead_list=restored_leads, campaign_id=self.campaign_id)
                 self.instantly.add_lead_to_campaign(lead_list=restore_leads, campaign_id=self.campaign_id)
 
                 # Modification for database
-                self.update_or_delete_leads(new_leads_email, "old_restore")
+                self.update_or_delete_leads(restored_leads, "old_restore")
 
-                # Count the total leads and update offset
-                total_count += len(new_leads_email)
+                    
+
                 offset += limit
 
             logger.info(f"total lead count for restoration {total_count}")
@@ -88,19 +90,25 @@ class UploadLeads:
                     "Course Description": lead.get('courseDescription'), "University Name": lead.get('universityName'), "FA24 Course Code": lead.get('courseCode')}})
                     new_leads_email.append(lead.get('email'))
                 
-                if len(new_leads_email) == 0:
-                    break
+             
+    
 
+                    total_count += 1
+                    if total_count >= total_leads:
+                        break
+                
                 logger.info(f"new_leads_email enriched {new_leads_email}")
-                logger.info(f"new_leads enriched {new_leads}")
+                logger.info(f"new_leads enriched {len(new_leads)}")
+
+
+                logger.info(f"total_count for new_enriched {total_count}")
 
                 self.instantly.delete_lead_from_campaign(lead_list=new_leads_email, campaign_id=self.campaign_id)
                 self.instantly.add_lead_to_campaign(lead_list=new_leads, campaign_id=self.campaign_id)
 
                 # here we update the leads in the database
                 self.update_or_delete_leads(new_leads_email, "new_enriched")
-                
-                total_count += len(new_leads_email)
+
                 offset += limit
 
 

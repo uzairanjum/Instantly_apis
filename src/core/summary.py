@@ -102,9 +102,9 @@ class Summary:
                 jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts}\n\nPlease approved these leads : https://packback-leads-fe.vercel.app/")
                 logger.info(f"send message total leads not yer contacted for {campaign_name}")
             elif not_yet_contacts <= lower_value:
-                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads")
+                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads\n\nPlease approved these leads : https://packback-leads-fe.vercel.app/")
                 logger.info(f"send message and start recycling leads for {campaign_name}")
-                # added_leads_to_campaign(self.campaign_id)
+                added_leads_to_campaign(self.campaign_id)
         except Exception as e:
             logger.error(f"Error notify_internally: {e}")
 

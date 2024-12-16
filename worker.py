@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
 
         # old leads dumps into mongodb
-        scheduler.add_job(restore_leads, 'interval', hours=3)
+        scheduler.add_job(restore_leads, 'interval', hours=24)
 
         # check domain health
         scheduler.add_job(update_domain_health_by_mailboxId, cron_trigger_at_09am)
