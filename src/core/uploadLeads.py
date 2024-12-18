@@ -156,5 +156,7 @@ def added_leads_to_campaign(campaign_id):
             restore_total += (new - new_added_leads)
             restore_added_leads = ul.restore_leads_from_mongodb(restore_total)
             logger.info(f"total leads {total}  - total added new {new_added_leads} -  total restore {restore_added_leads}")
+            return total, new_added_leads, restore_added_leads
+            
     except Exception as e:
             logger.error(f"Error in added_leads_to_campaign: {e}")

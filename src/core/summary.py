@@ -104,7 +104,8 @@ class Summary:
             elif not_yet_contacts <= lower_value:
                 jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads\n\nPlease approved these leads : https://packback-leads-fe.vercel.app/")
                 logger.info(f"send message and start recycling leads for {campaign_name}")
-                added_leads_to_campaign(self.campaign_id)
+                total, new_added_leads, restore_added_leads = added_leads_to_campaign(self.campaign_id)
+                jc.send_message(f"Leads added to instantly -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name} \n\nTotal leads - {total} \n\nNew leads - {new_added_leads} \n\nRestore leads - {restore_added_leads}")
         except Exception as e:
             logger.error(f"Error notify_internally: {e}")
 
