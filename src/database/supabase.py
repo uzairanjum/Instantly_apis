@@ -186,3 +186,7 @@ class SupabaseClient():
         except Exception as e:
             logger.error(f"Error inserting many rows: {e}")
             return None
+        
+    @retry(max_attempts=5, delay=2)
+    def get_leads(self, offset: int = 0, limit: int = 100) -> Union[Dict, None]:
+        return self.db.table('leads').select( "email").range(offset, offset + limit - 1).execute()
