@@ -401,7 +401,7 @@ response_tool = {
                 "Unsubscribe"
               ],
               "type": "string",
-              "description": "interested if lead is interested, not interested if lead is not interested, out of office if lead is out of office or leaves, unsubscribe if lead requests to be removed from the contact list"
+              "description": "Interested if lead is interested, NotInterested if lead is not interested, OutOfOffice if lead is out of office or leaves, Unsubscribe if lead requests to be removed from the contact list"
             }
           }
         },
