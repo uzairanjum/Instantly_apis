@@ -63,7 +63,7 @@ def update_lead_details():
 def update_daily_summary_report():
     try:
         logger.info("update_daily_summary_report is running")
-        for organization_id in [1, 2, 3]:
+        for organization_id in [1, 3, 4]:
             all_campaigns = db.get_all_campaigns(organization_id).data
             for campaign in all_campaigns:
                 logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
@@ -75,7 +75,7 @@ def update_daily_summary_report():
 def three_days_summary_report():
     try:
         logger.info("three_days_summary_report is running")
-        for organization_id in [1,2,3]:
+        for organization_id in [1,3, 4]:
             all_campaigns = db.get_all_campaigns(organization_id).data
             for campaign in all_campaigns:
                 logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}\n\n")
@@ -89,9 +89,6 @@ def update_weekly_summary_report(organization_id):
         logger.info("update_weekly_summary_report is running")
         all_campaigns = db.get_all_campaigns(organization_id).data
         for campaign in all_campaigns:
-            print(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
-            # if campaign.get("campaign_id") in ["01ed88d3-e261-4026-b0a2-b65a2e100394", "612488c7-dc53-4bc6-a645-25fc5cb60b37" ] :
-            # if campaign.get("campaign_id") in ["ba6b3507-c26c-484e-a773-dd36a4c07b65", "dedbd915-f18a-4aaf-9ce5-89d2442be355", "25acb19a-ef31-4028-ade1-a0a822654007"] :
             summary = Summary(campaign_id=campaign.get("campaign_id"))
             summary.update_weekly_summary()
     except Exception as e:
@@ -101,10 +98,19 @@ def update_weekly_summary_report(organization_id):
 def check_campaign_contacts():
     try:
         logger.info("check_campaign_contacts is running")
-        for campaign_id in ["ecdc673c-3d90-4427-a556-d39c8b69ae9f"]:
-            logger.info(f"campaign_id {campaign_id}")
+
+        campaign_details = [{'campaign_id': 'ecdc673c-3d90-4427-a556-d39c8b69ae9f', 'higher_value': 5000, 'lower_value': 2500}, 
+         {'campaign_id': 'fd0630c6-7aa1-471c-acae-0a77a8a63b1a', 'higher_value': 140, 'lower_value': 70}, 
+         {'campaign_id': '6c020a71-af8e-421a-bf8d-b024c491b114', 'higher_value': 400, 'lower_value': 200}]
+
+
+
+        for campaign_detail in campaign_details:            
+            campaign_id:str = campaign_detail.get('campaign_id')
+            higher_value:int = campaign_detail.get('higher_value')
+            lower_value:int = campaign_detail.get('lower_value')
             summary = Summary(campaign_id=campaign_id)
-            summary.notify_internally()
+            summary.notify_internally(higher_value, lower_value)
     except Exception as e:
         logger.exception("Exception occurred check_campaign_contacts %s", e)
 
@@ -164,6 +170,10 @@ if __name__ == "__main__":
 
         # havocSheild
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
+
+
+        # # chicory
+        # scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[4]) 
 
 
         # old leads dumps into mongodb

@@ -69,22 +69,14 @@ class Summary:
     def get_campaign_details_(self):
         try:
             campaign_name, organization_name, _ = get_campaign_details(self.campaign_id)
-            logger.info(f"Organization name: {organization_name}")
             return campaign_name, organization_name
         except Exception as e:
             logger.error(f"Error get_campaign_details_: {e}")
             return None, None
         
 
-    def notify_internally(self):
+    def notify_internally(self, higher_value, lower_value):
         try:
-            higher_value:int = 1000
-            lower_value:int = 250
-            if self.campaign_id == "ecdc673c-3d90-4427-a556-d39c8b69ae9f":
-                higher_value:int = 5000
-                lower_value:int = 2500
-
-            logger.info(f"higher_value: {higher_value}, lower_value: {lower_value}")
             _, organization_name, instantly_api_key= get_campaign_details(self.campaign_id)
             if not instantly_api_key:
                 return None
@@ -95,17 +87,23 @@ class Summary:
             not_yet_contacts = response.not_yet_contacted
             campaign_name=response.campaign_name
             
-            logger.info(f"not_yet_contacts: {not_yet_contacts}")
-            logger.info(f"send email to the team for {campaign_name}")
+            logger.info(f"organization_name: {organization_name.capitalize()} - campaign_name: {campaign_name} - not_yet_contacts: {not_yet_contacts} - higher_value: {higher_value} - lower_value: {lower_value}")
             
             if not_yet_contacts >= higher_value and not_yet_contacts <= lower_value:
-                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts}\n\nPlease approved these leads : https://packback-leads-fe.vercel.app/")
+                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name.capitalize()}\n\nCampaign - {campaign_name.capitalize()}\n\nTotal lead left - {not_yet_contacts}")
+                # \n\nPlease approved these leads : https://packback-leads-fe.vercel.app/
                 logger.info(f"send message total leads not yer contacted for {campaign_name}")
             elif not_yet_contacts <= lower_value:
-                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads\n\nPlease approved these leads : https://packback-leads-fe.vercel.app/")
+                jc.send_message(f"Reminder for leads -\n\nOrganization - {organization_name.capitalize()}\n\nCampaign - {campaign_name.capitalize()}\n\nTotal lead left - {not_yet_contacts} \n\nStart recycling leads")
+                # \n\nPlease approved these leads : https://packback-leads-fe.vercel.app/
                 logger.info(f"send message and start recycling leads for {campaign_name}")
-                total, new_added_leads, restore_added_leads = added_leads_to_campaign(self.campaign_id)
-                jc.send_message(f"Leads added to instantly -\n\nOrganization - {organization_name}\n\nCampaign - {campaign_name} \n\nTotal leads - {total} \n\nNew leads - {new_added_leads} \n\nRestore leads - {restore_added_leads}")
+
+
+                if self.campaign_id == "ecdc673c-3d90-4427-a556-d39c8b69ae9f":
+                    total, new_added_leads, restore_added_leads = added_leads_to_campaign(self.campaign_id)
+                    jc.send_message(f"Leads added to instantly -\n\nOrganization - {organization_name.capitalize()}\n\nCampaign - {campaign_name.capitalize()} \n\nTotal leads - {total} \n\nNew leads - {new_added_leads} \n\nRestore leads - {restore_added_leads}")
+
+
         except Exception as e:
             logger.error(f"Error notify_internally: {e}")
 

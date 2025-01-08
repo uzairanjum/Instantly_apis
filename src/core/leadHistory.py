@@ -8,6 +8,7 @@ from src.configurations.justcall import JustCallService
 from pytz import timezone
 from src.core.packback import PackbackConfig
 from src.core.havocSheild import HavocShieldForwarder
+from src.core.chicory import ChicoryForwarder
 
 
 
@@ -119,6 +120,10 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
             if organization_name == 'havocshield':
                 logger.info("havocshield lead")
                 HavocShieldForwarder().forward_email(lead_history, data)
+
+            if organization_name == 'chicory':
+                logger.info("chicory lead")
+                ChicoryForwarder().forward_email(lead_history, data)
     
         instantly_lead.save_lead_history(data)
         logger.info("lead email processed - %s :: %s", index, lead_email)
