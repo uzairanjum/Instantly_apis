@@ -15,7 +15,7 @@ logger = get_logger("Chicory")
 
 class ChicoryForwarder:
     def __init__(self):
-        self.to_email = 'rajpoot.waryah@gmail.com'
+        self.to_email = 'haya@chicory.ai'
 
     def forward_email(self, lead_history, data):
 
@@ -55,7 +55,7 @@ class ChicoryForwarder:
                 to_email=self.to_email,
                 uuid=message_uuid,
                 subject=subject, 
-                # bcc='uzair@hellogepeto.com, mert@hellogepeto.com'
+                bcc='uzairanjum@hellogepeto.com, mert@hellogepeto.com, uzaire@hellogepeto.com'
 
             )
             if send == 200:

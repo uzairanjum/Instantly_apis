@@ -100,8 +100,7 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
             jc.send_message(f"New interested lead -\n\n Organization - {organization_name}\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
             
      
-            if organization_name == 'packback' :
-                logger.info("count not reached")    
+            if organization_name == 'packback' :   
                 logger.info("incoming :: %s", data.get('incoming'))
                 logger.info("outgoing :: %s", data.get('outgoing'))
 
@@ -117,9 +116,6 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
                     logger.info("Need to check cc email if not cc'd then forward")
                     send_email_by_lead_email_forwarding(lead_history, data)
             
-            if organization_name == 'havocshield':
-                logger.info("havocshield lead")
-                HavocShieldForwarder().forward_email(lead_history, data)
 
             if organization_name == 'chicory':
                 logger.info("chicory lead")
