@@ -114,9 +114,12 @@ class SupabaseClient():
     
     @retry(max_attempts=5, delay=2)
     def get_flag_true_records(self, campaign_id: str, last_date: str,offset: int = 0, limit: int = 100) -> Union[Dict, None]:
-        logger.info("get_flag_true_records %s - %s ", campaign_id, last_date)
-        return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).gte('last_contact', last_date).eq('flag', True).range(offset, offset + limit - 1).execute()
-    
+        try:
+            logger.info("get_flag_true_records %s - %s ", campaign_id, last_date)
+            return self.db.table(self.summary).select( "lead_email, university_name, sent_date, last_contact, outgoing,incoming,reply,status,from_account, lead_status,first_reply_after,url").eq('campaign_id', campaign_id).gte('last_contact', last_date).eq('flag', True).range(offset, offset + limit - 1).execute()
+        except Exception as e:
+            logger.error(f"Error get_flag_true_records: {e}")
+            return None
     
         
     @retry(max_attempts=5, delay=2)

@@ -229,7 +229,8 @@ def update_daily_summary_report(campaign_id: str, campaign_name: str, organizati
         logger.info(f"worksheet_name {worksheet_name}")
 
         while True:
-            all_leads = db.get_flag_true_records(campaign_id, start_time, today,offset=offset, limit=limit).data
+            all_leads = db.get_flag_true_records(campaign_id, start_time,offset=offset, limit=limit).data
+            print("all_leads", len(all_leads))
             # all_leads = db.get_all_leads_by_campaign(offset=offset, limit=limit).data 
             if len(all_leads) == 0: 
                 break

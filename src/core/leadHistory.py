@@ -45,7 +45,8 @@ class LeadHistory:
                     "question_2" : lead_details.get('Question 2'),
                     "question_3" : lead_details.get('Question 3'),
                     "question_4" : lead_details.get('Question 4'),
-                    "linkedin_url": lead_details.get('LinkedIn Profile')
+                    "linkedin_url": lead_details.get('LinkedIn Profile'),
+                    # "first_sentence": lead_details.get('first_sentence')
                     }
         
 
@@ -115,9 +116,8 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
                 else:
                     logger.info("Need to check cc email if not cc'd then forward")
                     send_email_by_lead_email_forwarding(lead_history, data)
-            
-
-            if organization_name == 'chicory':
+        
+            if str(organization_name.strip()) == str('chicory'):
                 logger.info("chicory lead")
                 ChicoryForwarder().forward_email(lead_history, data)
     

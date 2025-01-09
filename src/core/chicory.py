@@ -55,7 +55,7 @@ class ChicoryForwarder:
                 to_email=self.to_email,
                 uuid=message_uuid,
                 subject=subject, 
-                bcc='uzairanjum@hellogepeto.com, mert@hellogepeto.com, uzaire@hellogepeto.com'
+                bcc='uzairanjum@hellogepeto.com, mert@hellogepeto.com, uzair@hellogepeto.com'
 
             )
             if send == 200:
