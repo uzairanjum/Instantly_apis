@@ -1,7 +1,7 @@
 from src.configurations.instantly import InstantlyAPI
 from src.database.supabase import SupabaseClient
 from src.common.utils import get_lead_details_history, get_campaign_details, construct_email_body_from_history,validate_lead_last_reply
-from src.core.responder import generate_ai_response, generate_ai_response_for_third_reply
+from src.core.responder import generate_ai_response, generate_ai_response_for_third_reply, generate_research_response
 from src.common.logger import get_logger
 from src.common.models import PackbackTenQuestionsRequest,TenQuestionsGeneratorRequest
 from src.configurations.justcall import JustCallService
@@ -46,7 +46,7 @@ class LeadHistory:
                     "question_3" : lead_details.get('Question 3'),
                     "question_4" : lead_details.get('Question 4'),
                     "linkedin_url": lead_details.get('LinkedIn Profile'),
-                    # "first_sentence": lead_details.get('first_sentence')
+                    "first_sentence": lead_details.get('first_sentence')
                     }
         
 
@@ -80,7 +80,6 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         instantly_lead = LeadHistory(lead_email, campaign_id, instantly_api_key)
         lead_history = instantly_lead.get_lead_details()
 
-        print(lead_history)
         if lead_history is None:
             return None
         logger.info("lead found :: %s", lead_email)
@@ -107,10 +106,13 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
 
 
 
-                if data.get('incoming') == 1 and data.get('outgoing') in [3,6,9]:
+                if data.get('incoming') == 1 and data.get('outgoing') % 3 == 0:
                     logger.info("third outgoing email")
-                    third_outgoing_email(lead_history, data)
-                elif data.get('incoming') == 1 and data.get('outgoing') in [1,2,4,5,7,8]:
+                    if data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
+                        send_email_by_lead_email(lead_history, data)
+                    else:
+                        third_outgoing_email(lead_history, data)
+                elif data.get('incoming') == 1 and data.get('outgoing') % 3 != 0:
                     logger.info("sending email")
                     send_email_by_lead_email(lead_history, data)
                 else:
@@ -175,6 +177,7 @@ def send_email_for_third_reply(lead_history,data):
     try:
         lead_email =  lead_history.get('email')
         conversation =  data.get('conversation')
+        conversation = validate_lead_conversation(conversation)
         conversation.pop()
         response = generate_ai_response_for_third_reply (lead_history, conversation)
 
@@ -226,7 +229,30 @@ def send_email_by_lead_email(lead_history,data):
     try:
         lead_email =  lead_history.get('email')
         conversation =  data.get('conversation')
-        response = generate_ai_response (lead_history, conversation)
+
+        conversation = validate_lead_conversation(conversation)
+
+
+
+        # print("total conversation before",len(conversation))
+        # conversation = conversation[:-1]
+        # print("total conversation after",len(conversation))
+
+        response = None
+
+
+        if data.get('campaign_id') == 'ecdc673c-3d90-4427-a556-d39c8b69ae9f':
+            print("generating ai response")
+            response = generate_ai_response (lead_history, conversation)
+
+        elif data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
+            print("generating research response")
+            response = generate_research_response(lead_history, conversation)
+        
+        
+        if response is None:
+            return False
+
 
 
         subject = response.get('subject')
@@ -327,3 +353,19 @@ def forward_email_by_lead_email(lead_history,data, forward_email):
         return False
     
 
+def validate_lead_conversation(conversation):
+    total_outgoing_before_incoming = []
+    for item in conversation:
+        if item["role"] == "assistant":
+            total_outgoing_before_incoming.append(item)
+        else:
+            break
+
+    if len(total_outgoing_before_incoming) > 3 and len(total_outgoing_before_incoming) <= 6:
+        conversation = conversation[3:] 
+    elif len(total_outgoing_before_incoming) > 6 and len(total_outgoing_before_incoming) <= 9:
+        conversation = conversation[6:]
+    elif len(total_outgoing_before_incoming) > 9 and len(total_outgoing_before_incoming) <= 12:
+        conversation = conversation[9:]
+    
+    return conversation
