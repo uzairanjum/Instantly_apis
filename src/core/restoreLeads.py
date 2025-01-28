@@ -89,7 +89,7 @@ def restore_leads_from_db(campaign_id):
     try:
         total_leads = 1000
         if campaign_id == "ecdc673c-3d90-4427-a556-d39c8b69ae9f":
-            total_leads = 1000
+            total_leads = 2000
         
         logger.info(f"total_leads {total_leads}")
         _, _, instantly_api_key = get_campaign_details(campaign_id)
