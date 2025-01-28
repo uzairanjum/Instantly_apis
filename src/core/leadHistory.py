@@ -207,9 +207,21 @@ def send_email_for_third_reply(lead_history,data):
         logger.info("email_cc :: %s", email_cc)
         logger.info("email_bcc :: %s", email_bcc)
 
+        email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+
+        merged_email = f"""
+        <div>
+            {content}
+            <br>
+            <br>
+            {email_body}
+        </div>
+        """
+
+
 
         send = instantly.send_reply(
-            message=content,
+            message=merged_email,
             from_email=from_account,
             to_email=lead_email,
             uuid=message_uuid,
@@ -281,10 +293,24 @@ def send_email_by_lead_email(lead_history,data):
         logger.info("email_bcc :: %s", email_bcc)
 
 
+       
+
+
+        email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+
+        merged_email = f"""
+        <div>
+            {content}
+            <br>
+            <br>
+            {email_body}
+        </div>
+        """
+
 
 
         send = instantly.send_reply(
-            message=content,
+            message=merged_email,
             from_email=from_account,
             to_email=lead_email,
             uuid=message_uuid,
