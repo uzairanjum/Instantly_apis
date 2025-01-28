@@ -29,7 +29,7 @@ def generate_ai_response(lead_history:dict, previous_messages:list ):
             "content": response,
             "subject": previous_messages[0].get('subject'),
             "cc": ae_data.get('cc'), 
-            "bcc": ae_data.get('bcc'),
+            "bcc": f'{ae_data.get('bcc')}, uzair.anjum@hellogepeto.com, uzair@hellogepeto.com, mert@hellogepeto.com',
             "timestamp": previous_messages[-1].get('timestamp')
         }  
     except Exception as e:
@@ -77,7 +77,7 @@ def generate_ai_response_for_third_reply(lead_history:dict, previous_messages:li
             "content": response,
             "subject": previous_messages[0].get('subject'),
             "cc": ae_data.get('cc'), 
-            "bcc": ae_data.get('bcc'),
+            "bcc": f'{ae_data.get('bcc')}, uzair.anjum@hellogepeto.com, uzair@hellogepeto.com, mert@hellogepeto.com',
             "timestamp": previous_messages[-1].get('timestamp')
         }  
     except Exception as e:
