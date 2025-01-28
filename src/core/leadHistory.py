@@ -244,12 +244,6 @@ def send_email_by_lead_email(lead_history,data):
 
         conversation = validate_lead_conversation(conversation)
 
-
-
-        # print("total conversation before",len(conversation))
-        # conversation = conversation[:-1]
-        # print("total conversation after",len(conversation))
-
         response = None
 
 
