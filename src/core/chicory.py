@@ -43,7 +43,7 @@ class ChicoryForwarder:
             logger.info("message_uuid :: %s", message_uuid)
             logger.info("linkedin_url :: %s", linkedin_url)
 
-            message_content = f"<div> <br><br><strong>Interested Lead</strong><br><br>Email: {lead_email}<br>LinkedIn Profile: {linkedin_url}<br><br><br><strong>Email Conversation History</strong><br><br>{email_body}</div>"
+            message_content = f"<div><br>Email: {lead_email}<br>LinkedIn Profile: {linkedin_url}<br><br><br><strong>Email Conversation History</strong><br><br>{email_body}</div>"
 
             logger.info("message_content :: %s", message_content)
 
