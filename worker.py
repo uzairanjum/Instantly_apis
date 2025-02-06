@@ -168,13 +168,6 @@ if __name__ == "__main__":
         # packback
         scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
 
-        # # havocSheild
-        # scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[3]) 
-
-
-        # # chicory
-        # scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_sun_pm, args=[4]) 
-
 
         # old leads dumps into mongodb
         scheduler.add_job(restore_leads, 'interval', hours=24)

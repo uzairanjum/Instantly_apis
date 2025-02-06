@@ -131,7 +131,6 @@ class PackbackConfig:
             "open_ai_model": open_ai_model
 
         }
-
         while attempts < max_attempts:
             try:
                 logger.info(f"Attempt {attempts + 1} to call {url}")
