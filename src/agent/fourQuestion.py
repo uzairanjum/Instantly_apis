@@ -9,11 +9,12 @@ from src.common.logger import get_logger
 from src.common.models import DiscussionQuestionsResponse, DiscussionQuestion
 logger = get_logger("FOUR_QUESTIONS_AGENT")
 
-openai = OpenAiConfig()
 
 
-def four_questions_agent(course_name, course_description, open_ai_model):
+
+def four_questions_agent(course_name, course_description, open_ai_model, open_ai_key):
     try:  
+        openai = OpenAiConfig(open_ai_key)
         messages = [{
             "role": "system",
             "content": f"""

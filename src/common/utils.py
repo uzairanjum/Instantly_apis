@@ -1,7 +1,6 @@
 from src.configurations.instantly import InstantlyAPI
 from src.configurations.llm import OpenAiConfig
 from datetime import datetime, timedelta
-from src.settings import settings
 from src.common.logger import get_logger
 from src.common.prompts import packback_prompt, question_prompt
 from src.common.models import WeeklyCampaignSummary
@@ -14,21 +13,27 @@ import pytz
 
 
 
-open_ai = OpenAiConfig()
 db = SupabaseClient()
 gs_client = GoogleSheetClient()
 logger = get_logger("Utils")
 ct_timezone = pytz.timezone("US/Central")
 
-def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str], None]:
+def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str, str], None]:
     campaign_details = db.get_campaign_details(campaign_id)
     if len(campaign_details.data) == 0:
-        return None, None, None
+        return None, None, None, None
     campaign_name = campaign_details.data[0].get("campaign_name")
     organization_details = campaign_details.data[0].get("organizations")
     organization_name = organization_details.get('name')
     instantly_api_key = organization_details.get('api_key')
-    return campaign_name, organization_name, instantly_api_key
+    open_api_key = organization_details.get('llm_api_key', None)
+    return campaign_name, organization_name, instantly_api_key, open_api_key
+
+def get_open_ai_key(organization_name:str) -> Union[str, None]:
+    open_ai_key = db.get_campaign_llm_key_by_name(organization_name)
+    if len(open_ai_key.data) == 0:
+        return None
+    return open_ai_key.data[0].get('llm_api_key')
 
 def get_csv_details(campaign_id:str, summary_type:str) -> Union[tuple[str, str], None]:
     logger.info("get_csv_details %s - %s", campaign_id, summary_type)
@@ -419,8 +424,10 @@ response_tool = {
 }
 
 
-def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list):
+def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list, open_api_key: str):
     response = ''
+    open_ai = OpenAiConfig(open_api_key)
+
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
     answer = ''
@@ -473,16 +480,13 @@ validate_tool = {
 def trueOrFalse(value:str):
     return True if value == "yes" else False
 
-def validate_lead_last_reply(message_history: list):
+def validate_lead_last_reply(message_history: list, open_api_key: str):
+    open_ai = OpenAiConfig(open_api_key)
     ai_message_history = [{"role": item["role"], "content": item["content"]} for item in message_history]   
     formatted_history = [{"role": "system", "content": question_prompt}, *ai_message_history]
     response = open_ai.generate_response_using_tools(all_messages= formatted_history, response_tool=validate_tool)
     return trueOrFalse(response.get('answer'))
  
-
-def trueOrFalse(value:str):
-    return True if value == "yes" else False
-
 
 def construct_email_body_from_history(messages:list, lead_email:str, account_email:str):
     html = '<div style="font-family: Arial, sans-serif; color: #202124; max-width: 600px; margin: auto; background-color: #f1f3f4; padding: 20px; border-radius: 8px;">'

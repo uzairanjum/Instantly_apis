@@ -3,10 +3,9 @@
 from src.configurations.llm import OpenAiConfig
 from src.common.logger import get_logger
 from src.common.utils import trueOrFalse
-from src.common.models import ValidateDescriptionResponse
 logger = get_logger("Validate Description")
 
-openai = OpenAiConfig()
+
 
 
 validate_tool = {
@@ -46,8 +45,9 @@ validate_tool = {
 
 
 
-def validate_description_agent(course_code, course_description, open_ai_model):
+def validate_description_agent(course_code, course_description, open_ai_model, open_ai_key):
     try:  
+        openai = OpenAiConfig(open_ai_key)
         messages = [{
             "role": "user",
             "content": f"""

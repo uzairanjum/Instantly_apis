@@ -9,13 +9,13 @@ from src.database.supabase import SupabaseClient
 db = SupabaseClient()
 
 
-logger = get_logger("HavocShieldForwarder")
+logger = get_logger("Gepeto")
 
 
 
-class HavocShieldForwarder:
+class GepetoForwarder:
     def __init__(self):
-        self.to_email = 'dbutkunas@havocshield.com'
+        self.to_email = 'mert@hellogepeto.com'
 
     def forward_email(self, lead_history, data):
 
@@ -43,7 +43,7 @@ class HavocShieldForwarder:
             logger.info("message_uuid :: %s", message_uuid)
             logger.info("linkedin_url :: %s", linkedin_url)
 
-            message_content = f"<div> <br><br><strong>Interested Lead</strong><br><br>Email: {lead_email}<br>LinkedIn Profile: {linkedin_url}<br><br><br><strong>Email Conversation History</strong><br><br>{email_body}</div>"
+            message_content = f"<div><br>Email: {lead_email}<br>LinkedIn Profile: {linkedin_url}<br><br><br><strong>Email Conversation History</strong><br><br>{email_body}</div>"
 
             logger.info("message_content :: %s", message_content)
 
@@ -55,7 +55,7 @@ class HavocShieldForwarder:
                 to_email=self.to_email,
                 uuid=message_uuid,
                 subject=subject, 
-                # bcc='uzair@hellogepeto.com, mert@hellogepeto.com'
+                bcc='uzair.anjum@hellogepeto.com, uzair@hellogepeto.com'
 
             )
             if send == 200:

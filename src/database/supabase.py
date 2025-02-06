@@ -36,6 +36,7 @@ class SupabaseClient():
         self.summary = "summary"
         self.domain_health = "domain_health"
         self.campaigns = "campaigns"
+        self.organizations = "organizations"
         self.csv_details = "csvs"
         self.db: Client = create_client(supabase_url , supabase_key)
 
@@ -66,9 +67,13 @@ class SupabaseClient():
     @retry(max_attempts=5, delay=2)
     def get_campaign_details(self, campaign_id: str)-> Union[Dict, None]:
         return self.db.table(self.campaigns) \
-            .select("campaign_id, campaign_name, organizations(name, api_key)") \
+            .select("campaign_id, campaign_name, organizations(name, api_key, llm_api_key)") \
             .eq('campaign_id', campaign_id) \
             .execute()
+    
+    @retry(max_attempts=5, delay=2)
+    def get_campaign_llm_key_by_name(self, name: str)-> Union[Dict, None]:
+        return self.db.table(self.organizations).select("llm_api_key").eq('name', name).execute()
     
     @retry(max_attempts=5, delay=2)
     def get_all_campaigns(self, organization_id: str)-> Union[Dict, None]:

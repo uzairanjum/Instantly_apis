@@ -7,8 +7,8 @@ from src.common.models import PackbackTenQuestionsRequest,TenQuestionsGeneratorR
 from src.configurations.justcall import JustCallService
 from pytz import timezone
 from src.core.packback import PackbackConfig
-from src.core.havocSheild import HavocShieldForwarder
 from src.core.chicory import ChicoryForwarder
+from src.core.gepeto import GepetoForwarder
 
 
 
@@ -74,31 +74,35 @@ class LeadHistory:
 
 def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = False):
     try:
-        campaign_name, organization_name, instantly_api_key = get_campaign_details(campaign_id)
+        campaign_name, organization_name, instantly_api_key, open_api_key = get_campaign_details(campaign_id)
         if organization_name is None:
             return None
+        
         instantly_lead = LeadHistory(lead_email, campaign_id, instantly_api_key)
         lead_history = instantly_lead.get_lead_details()
 
         if lead_history is None:
             return None
+        
         logger.info("lead found :: %s", lead_email)
         lead_emails = instantly_lead.get_lead_emails()
         if lead_emails is None:
             return None
         logger.info("lead email history found :: %s", lead_email)
-        data =  get_lead_details_history(lead_email, campaign_id, lead_emails)
+        data =  get_lead_details_history(lead_email, campaign_id, lead_emails, open_api_key)
         if data is None:
             return None
     
         data['flag'] = flag
-        data['university_name'] = lead_history.get('university_name')
+        data['university_name'] = lead_history.get('university_name', None)
         data['recycled'] = False
 
         if event =='reply_received' and data.get('status') == "Interested":
+
+
             logger.info("Interested lead - %s", lead_email)
             jc.send_message(f"New interested lead -\n\n Organization - {organization_name}\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
-            
+            organization_name = str(organization_name.strip()) 
      
             if organization_name == 'packback' :   
                 logger.info("incoming :: %s", data.get('incoming'))
@@ -109,19 +113,23 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
                 if data.get('incoming') == 1 and data.get('outgoing') % 3 == 0:
                     logger.info("third outgoing email")
                     if data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
-                        send_email_by_lead_email(lead_history, data)
+                        send_email_by_lead_email(lead_history, data, open_api_key)
                     else:
-                        third_outgoing_email(lead_history, data)
+                        third_outgoing_email(lead_history, data, open_api_key)
                 elif data.get('incoming') == 1 and data.get('outgoing') % 3 != 0:
                     logger.info("sending email")
-                    send_email_by_lead_email(lead_history, data)
+                    send_email_by_lead_email(lead_history, data, open_api_key)
                 else:
                     logger.info("Need to check cc email if not cc'd then forward")
-                    send_email_by_lead_email_forwarding(lead_history, data)
+                    send_email_by_lead_email_forwarding(lead_history, data, open_api_key)
         
-            if str(organization_name.strip()) == str('chicory'):
-                logger.info("chicory lead")
+            if organization_name == str('chicory'):
+                logger.info("chicory lead forwarder")
                 ChicoryForwarder().forward_email(lead_history, data)
+
+            if organization_name == str('gepeto'):
+                logger.info("gepeto lead forwarder")
+                GepetoForwarder().forward_email(lead_history, data)
     
         instantly_lead.save_lead_history(data)
         logger.info("lead email processed - %s :: %s", index, lead_email)
@@ -130,18 +138,18 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         logger.error(f"Error get_data_from_instantly: {e}")
         return None
     
-def third_outgoing_email(lead_history, data):
+def third_outgoing_email(lead_history, data, open_api_key):
 
     try:
         conversation = data.get('conversation')
-        ten_question_prompt = validate_lead_last_reply(conversation)
+        ten_question_prompt = validate_lead_last_reply(conversation, open_api_key)
         packback_response = None
 
         logger.info("ten_question_prompt for lead - %s :: %s", lead_history.get('email'), ten_question_prompt)
         if not ten_question_prompt:
             logger.info("sending email to :: %s", lead_history.get('email'))
             logger.info("no ten question prompt found")
-            return send_email_by_lead_email(lead_history,data)
+            return send_email_by_lead_email(lead_history,data, open_api_key)
 
         if lead_history.get('course_description') is None:
                 packback_response = packback_config.packback_ten_questions(PackbackTenQuestionsRequest(
@@ -166,20 +174,18 @@ def third_outgoing_email(lead_history, data):
         questions = packback_response.questions
         for idx in range(len(questions)):   
             lead_history[f'q{idx + 1}'] = questions[idx].question if idx < len(questions) else ''
-        return send_email_for_third_reply(lead_history, data)
+        return send_email_for_third_reply(lead_history, data, open_api_key)
     except Exception as e:
         logger.error("Error in third_outgoing_email - %s", e)
         return False
             
-        
-
-def send_email_for_third_reply(lead_history,data):
+def send_email_for_third_reply(lead_history,data, open_api_key:str):
     try:
         lead_email =  lead_history.get('email')
         conversation =  data.get('conversation')
         conversation = validate_lead_conversation(conversation)
         conversation.pop()
-        response = generate_ai_response_for_third_reply (lead_history, conversation)
+        response = generate_ai_response_for_third_reply (lead_history, conversation, open_api_key)
 
 
         subject = response.get('subject')
@@ -237,7 +243,7 @@ def send_email_for_third_reply(lead_history,data):
         logger.error("Error sending email - %s", e)
         return False
    
-def send_email_by_lead_email(lead_history,data):
+def send_email_by_lead_email(lead_history,data, open_api_key:str):
     try:
         lead_email =  lead_history.get('email')
         conversation =  data.get('conversation')
@@ -249,11 +255,11 @@ def send_email_by_lead_email(lead_history,data):
 
         if data.get('campaign_id') == 'ecdc673c-3d90-4427-a556-d39c8b69ae9f':
             print("generating ai response")
-            response = generate_ai_response (lead_history, conversation)
+            response = generate_ai_response (lead_history, conversation, open_api_key)
 
         elif data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
             print("generating research response")
-            response = generate_research_response(lead_history, conversation)
+            response = generate_research_response(lead_history, conversation, open_api_key)
         
         
         if response is None:
@@ -320,11 +326,11 @@ def send_email_by_lead_email(lead_history,data):
         logger.error("Error sending email - %s", e)
         return False
    
-def send_email_by_lead_email_forwarding(lead_history,data):
+def send_email_by_lead_email_forwarding(lead_history,data, open_api_key):
     try:
         lead_email =  lead_history.get('email')
         conversation =  data.get('conversation')
-        response = generate_ai_response (lead_history, conversation)
+        response = generate_ai_response (lead_history, conversation, open_api_key)
         cc = response.get('cc')
         email_cc = data['cc']
         if email_cc != cc:
@@ -372,7 +378,6 @@ def forward_email_by_lead_email(lead_history,data, forward_email):
         logger.error("Error sending email - %s", e)
         return False
     
-
 def validate_lead_conversation(conversation):
     total_outgoing_before_incoming = []
     for item in conversation:

@@ -9,9 +9,9 @@ logger = get_logger("LLM")
 
 class OpenAiConfig():
 
-    def __init__(self ):
+    def __init__(self, open_api_key: str):
 
-        self.client = OpenAI(api_key = settings.OPENAI_API_KEY ,max_retries = 3)
+        self.client = OpenAI(api_key = open_api_key ,max_retries = 3)
 
     def generate_response(self, messages:list,model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0):
         try:

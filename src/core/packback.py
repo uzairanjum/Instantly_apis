@@ -8,8 +8,8 @@ from src.agent.fourQuestion import four_questions_agent
 from src.agent.tenQuestion import ten_questions_agent
 from src.agent.validateDescription import validate_description_agent
 from src.settings import settings
-from src.common.utils import calculate_gpt4o_mini_cost,calculate_gpt4o_cost
-from src.configurations.instructor import ExtractOpenAI
+from src.common.utils import calculate_gpt4o_mini_cost,get_open_ai_key
+
 
 logger = get_logger("PACKBACK_CONFIG")
 import time
@@ -17,15 +17,20 @@ import time
 
 
 class PackbackConfig:
+
     def __init__(self):
-        pass
+        self.open_ai_key:str = get_open_ai_key('packback')
+
 
    
     
     def packback_four_questions(self, request: PackbackCourseDescriptionRequest) -> Union[PackbackCourseQuestionsResponse, None]:
         course_description_response = self.packback_course_description(request)
         if course_description_response:
-            return self.four_questions_generator(QuestionGeneratorRequest(course_name=course_description_response.course_name, course_description=course_description_response.course_description, open_ai_model=request.open_ai_model, total_completion_tokens=course_description_response.total_completion_tokens, total_prompt_tokens=course_description_response.total_prompt_tokens))
+            print(f"course_description_response :: {course_description_response}")
+            print(f"openai :: {self.open_ai_key}")
+            return self.four_questions_generator(QuestionGeneratorRequest(course_name=course_description_response.course_name, course_description=course_description_response.course_description, open_ai_model=request.open_ai_model, total_completion_tokens=course_description_response.total_completion_tokens,\
+                                                                           total_prompt_tokens=course_description_response.total_prompt_tokens),open_ai_key=self.open_ai_key)
         return None
 
     def packback_ten_questions(self, request: PackbackTenQuestionsRequest) -> Union[PackbackCourseQuestionsResponse, None]:
@@ -33,15 +38,15 @@ class PackbackConfig:
         if course_description_response:
             return self.ten_questions_generator(TenQuestionsGeneratorRequest(course_name=course_description_response.course_name, \
                 course_description=course_description_response.course_description, open_ai_model=request.open_ai_model, \
-                question1=request.question1, question2=request.question2, question3=request.question3, question4=request.question4))
+                question1=request.question1, question2=request.question2, question3=request.question3, question4=request.question4 ),open_ai_key=self.open_ai_key)
         return None
 
-    def four_questions_generator(self, request: QuestionGeneratorRequest) -> Union[PackbackCourseQuestionsResponse, None]:
+    def four_questions_generator(self, request: QuestionGeneratorRequest, open_ai_key:str) -> Union[PackbackCourseQuestionsResponse, None]:
         try:
             if request.course_name and request.course_description:
                 completion_tokens = request.total_completion_tokens
                 prompt_tokens = request.total_prompt_tokens
-                questions_response = four_questions_agent(request.course_name, request.course_description, request.open_ai_model)
+                questions_response = four_questions_agent(request.course_name, request.course_description, request.open_ai_model, open_ai_key)
                 completion_tokens += questions_response.total_completion_tokens
                 prompt_tokens += questions_response.total_prompt_tokens
                 cost = 0
@@ -52,13 +57,13 @@ class PackbackConfig:
             logger.error(f"Error processing packback four questions request: {e}")
             return None  
            
-    def ten_questions_generator(self, request: TenQuestionsGeneratorRequest) -> Union[PackbackCourseQuestionsResponse, None]:
+    def ten_questions_generator(self, request: TenQuestionsGeneratorRequest, open_ai_key:str) -> Union[PackbackCourseQuestionsResponse, None]:
         try:
             if request.course_name and request.course_description:
                 completion_tokens = request.total_completion_tokens
                 prompt_tokens = request.total_prompt_tokens
                 questions_response = ten_questions_agent(request.course_name, request.course_description, request.question1, \
-                                            request.question2, request.question3, request.question4, request.open_ai_model)
+                                            request.question2, request.question3, request.question4, request.open_ai_model, open_ai_key)
                 completion_tokens += questions_response.total_completion_tokens
                 prompt_tokens += questions_response.total_prompt_tokens
                 cost = 0
@@ -93,9 +98,11 @@ class PackbackConfig:
                     elif objective.get('objective') == "course_description":
                         course_description = objective.get('value')
                         break
+                logger.info(f"course_name :: {course_name}")
+                logger.info(f"course_description :: {course_description}")
 
                 if course_name and course_description:
-                   validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model)
+                   validate_description_response = validate_description_agent(request.course_code , course_description,request.open_ai_model, self.open_ai_key)
                    if not validate_description_response:
                        continue
                    return PackbackCourseDescriptionResponse(course_name=course_name, course_description=course_description, total_completion_tokens=response.get('total_completion_tokens'), total_prompt_tokens=response.get('total_prompt_tokens'), open_ai_model=request.open_ai_model)
