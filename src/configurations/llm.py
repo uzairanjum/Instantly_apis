@@ -12,6 +12,13 @@ class OpenAiConfig():
     def __init__(self, open_api_key: str):
         logger.info(f" OpenAiConfig open_api_key :: {open_api_key}")
 
+        logger.info(f" OpenAiConfig open_api_key :: {type(open_api_key)}")
+
+        logger.info(f" OpenAiConfig settings.OPENAI_API_KEY :: {settings.OPENAI_API_KEY}")
+
+        if not open_api_key:
+             raise ValueError("Missing OpenAI API Key in settings.")
+
         # client_config = {
         #     'api_key': open_api_key,
         #     'max_retries': 3
@@ -20,14 +27,21 @@ class OpenAiConfig():
         # # Initialize the client with the configuration
         # self.client = OpenAI(**client_config)
 
-        logger.info(f" OpenAiConfig open_api_key :: {type(open_api_key)}")
+        
 
-        logger.info(f" OpenAiConfig settings.OPENAI_API_KEY :: {settings.OPENAI_API_KEY}")
+        try:
+            self.client = OpenAI(api_key = settings.OPENAI_API_KEY, max_retries = 3)
+        except Exception as e:
+            logger.error(f" OpenAiConfig response error :: {e}")
 
-
-        self.client = OpenAI(api_key = settings.OPENAI_API_KEY, max_retries = 3)
+        try:
+            self.client = OpenAI(api_key = open_api_key, max_retries = 3)
+        except Exception as e:
+            logger.error(f" OpenAiConfig response error 22 :: {e}")
 
         logger.info(f" OpenAiConfig client :: {self.client}")
+
+
     def generate_response(self, messages:list,model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0):
         try:
             response = self.client.chat.completions.create(model = model, messages = messages,  max_tokens = max_tokens, temperature = temperature)
