@@ -19,7 +19,13 @@ class OpenAiConfig():
         
         # # Initialize the client with the configuration
         # self.client = OpenAI(**client_config)
-        self.client.api_key = open_api_key
+
+        logger.info(f" OpenAiConfig open_api_key :: {type(open_api_key)}")
+
+        logger.info(f" OpenAiConfig settings.OPENAI_API_KEY :: {settings.OPENAI_API_KEY}")
+
+
+        self.client = OpenAI(api_key = settings.OPENAI_API_KEY, max_retries = 3)
 
         logger.info(f" OpenAiConfig client :: {self.client}")
     def generate_response(self, messages:list,model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0):
