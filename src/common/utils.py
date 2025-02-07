@@ -425,9 +425,11 @@ response_tool = {
 
 
 def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list, open_api_key: str):
+    logger.info(f"lead_email:: {lead_email}")
+    logger.info(f"get_lead_details_history :: {open_api_key}")
     response = ''
     open_ai = OpenAiConfig(open_api_key)
-
+    logger.info(f"open_api_key :: {open_api_key}")
     logger.info(f"Processing lead - {lead_email}")
     timestamp = datetime.now().isoformat()
     answer = ''

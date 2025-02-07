@@ -47,7 +47,12 @@ validate_tool = {
 
 def validate_description_agent(course_code, course_description, open_ai_model, open_ai_key):
     try:  
+  
+        logger.info(f"validate_description_agent open_ai_key :: {open_ai_key}")
+
         openai = OpenAiConfig(open_ai_key)
+
+
         messages = [{
             "role": "user",
             "content": f"""

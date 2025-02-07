@@ -10,6 +10,8 @@ logger = get_logger("LLM")
 class OpenAiConfig():
 
     def __init__(self, open_api_key: str):
+        logger.info(f" OpenAiConfig open_api_key :: {open_api_key}")
+
 
         self.client = OpenAI(api_key = open_api_key ,max_retries = 3)
 
