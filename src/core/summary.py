@@ -68,7 +68,7 @@ class Summary:
 
     def get_campaign_details_(self):
         try:
-            campaign_name, organization_name, _ = get_campaign_details(self.campaign_id)
+            campaign_name, organization_name, _, _ = get_campaign_details(self.campaign_id)
             return campaign_name, organization_name
         except Exception as e:
             logger.error(f"Error get_campaign_details_: {e}")
@@ -77,7 +77,7 @@ class Summary:
 
     def notify_internally(self, higher_value, lower_value):
         try:
-            _, organization_name, instantly_api_key= get_campaign_details(self.campaign_id)
+            _, organization_name, instantly_api_key,_= get_campaign_details(self.campaign_id)
             if not instantly_api_key:
                 return None
             instantly = InstantlyAPI(instantly_api_key)

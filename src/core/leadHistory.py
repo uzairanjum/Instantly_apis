@@ -199,7 +199,7 @@ def send_email_for_third_reply(lead_history,data, open_api_key:str):
         email_cc = data['cc']
         email_bcc = data['bcc']
 
-        _, _, instantly_api_key = get_campaign_details(campaign_id)
+        _, _, instantly_api_key,_ = get_campaign_details(campaign_id)
         instantly = InstantlyAPI(instantly_api_key)
 
 
@@ -278,7 +278,7 @@ def send_email_by_lead_email(lead_history,data, open_api_key:str):
         email_cc = data['cc']
         email_bcc = data['bcc']
 
-        _, _, instantly_api_key = get_campaign_details(campaign_id)
+        _, _, instantly_api_key,_ = get_campaign_details(campaign_id)
         instantly = InstantlyAPI(instantly_api_key)
 
 
@@ -352,7 +352,7 @@ def forward_email_by_lead_email(lead_history,data, forward_email):
         conversation = data.get('conversation')
         subject = conversation[0].get('subject')
 
-        _, _, instantly_api_key = get_campaign_details(campaign_id)
+        _, _, instantly_api_key,_ = get_campaign_details(campaign_id)
 
         instantly = InstantlyAPI(instantly_api_key)
         email_body = construct_email_body_from_history(conversation, lead_email, from_account)

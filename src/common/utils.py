@@ -110,7 +110,7 @@ def get_status(value):
 
 
 def get_weekly_summary_report(campaign_id: str, client_name: str) -> Union[WeeklyCampaignSummary, None]:
-    _, _, instantly_api_key= get_campaign_details(campaign_id)
+    _, _, instantly_api_key,_= get_campaign_details(campaign_id)
     if not instantly_api_key:
         return None
     instantly = InstantlyAPI(instantly_api_key)

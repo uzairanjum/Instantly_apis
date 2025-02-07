@@ -30,7 +30,7 @@ class GepetoForwarder:
             conversation = data.get('conversation')
             subject = conversation[0].get('subject')
 
-            _, _, instantly_api_key = get_campaign_details(campaign_id)
+            _, _, instantly_api_key ,_= get_campaign_details(campaign_id)
 
             instantly = InstantlyAPI(instantly_api_key)
 

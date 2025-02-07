@@ -142,7 +142,7 @@ class UploadLeads:
 
 def added_leads_to_campaign(campaign_id):
     try:
-            _, _, instantly_api_key = get_campaign_details(campaign_id)
+            _, _, instantly_api_key,_ = get_campaign_details(campaign_id)
             total = int(settings.TOTAL_LEADS)
             new = int(settings.NEW)
      

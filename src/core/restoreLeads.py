@@ -92,7 +92,7 @@ def restore_leads_from_db(campaign_id):
             total_leads = 2000
         
         logger.info(f"total_leads {total_leads}")
-        _, _, instantly_api_key = get_campaign_details(campaign_id)
+        _, _, instantly_api_key,_ = get_campaign_details(campaign_id)
         offset = 0
         limit = 100
 
