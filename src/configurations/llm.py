@@ -29,6 +29,7 @@ class OpenAiConfig():
             prompt_tokens = response.usage.prompt_tokens
             return response.choices[0].message.content, completion_tokens, prompt_tokens
         except Exception as e:
+            logger.error(f" OpenAiConfig response error :: {e}")
             return False
         
     def generate_response_using_tools(self,all_messages: list, model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0, response_tool:dict = {}):
@@ -43,7 +44,8 @@ class OpenAiConfig():
             response_ = json.loads(tool_calls[0].function.arguments)
             return response_
         except Exception as e:
-            logger.error("openai response error %s",e)
+            logger.error(f" OpenAiConfig response error :: {e}")
             return False
         
+
 
