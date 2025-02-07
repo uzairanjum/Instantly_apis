@@ -24,7 +24,6 @@ class OpenAiConfig():
     def generate_response(self, messages:list,model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0):
         try:
             response = self.client.chat.completions.create(model = model, messages = messages,  max_tokens = max_tokens, temperature = temperature)
-            logger.info(f" OpenAiConfig response :: {response}")
             completion_tokens = response.usage.completion_tokens
             prompt_tokens = response.usage.prompt_tokens
             return response.choices[0].message.content, completion_tokens, prompt_tokens
@@ -34,9 +33,7 @@ class OpenAiConfig():
         
     def generate_response_using_tools(self,all_messages: list, model:str= "gpt-4o-mini", max_tokens:int = 600, temperature:int = 0, response_tool:dict = {}):
         try:
-            response = self.client.chat.completions.create(model=model ,messages=all_messages, temperature=temperature, max_tokens=max_tokens,tools=response_tool.get('tools'),tool_choice=response_tool.get('tool_choice'))
-            logger.info(f" OpenAiConfig response using tools:: {response}")
-      
+            response = self.client.chat.completions.create(model=model ,messages=all_messages, temperature=temperature, max_tokens=max_tokens,tools=response_tool.get('tools'),tool_choice=response_tool.get('tool_choice'))      
             response_message = response.choices[0].message
             tool_calls = response_message.tool_calls
             if not tool_calls:
