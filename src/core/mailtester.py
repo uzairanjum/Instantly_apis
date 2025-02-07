@@ -85,7 +85,7 @@ def update_domain_health_by_mailboxId():
 
 
 def add_mail_tester_emails_to_campaign_contacts(campaign_id: str):
-    _, organization_name, instantly_api_key = get_campaign_details(campaign_id)
+    _, organization_name, instantly_api_key, _ = get_campaign_details(campaign_id)
     if organization_name is None:
         return None
     count = 0
