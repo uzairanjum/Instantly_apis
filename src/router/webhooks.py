@@ -23,6 +23,7 @@ def incoming_sms(data:dict):
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
 
+
 @instantly_webhook_router.post('/outgoing')
 def outgoing_sms(data:dict):
     try:    

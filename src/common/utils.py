@@ -30,6 +30,7 @@ def get_campaign_details(campaign_id:str) -> Union[tuple[str, str, str, str], No
     return campaign_name, organization_name, instantly_api_key, open_api_key
 
 def get_open_ai_key(organization_name:str) -> Union[str, None]:
+    logger.info(f"get_open_ai_key :: {organization_name}")
     open_ai_key = db.get_campaign_llm_key_by_name(organization_name)
     if len(open_ai_key.data) == 0:
         return None
