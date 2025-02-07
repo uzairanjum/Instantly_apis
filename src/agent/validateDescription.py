@@ -52,9 +52,9 @@ def validate_description_agent(course_code, course_description, open_ai_model, o
             "role": "user",
             "content": f"""
                 You are an academic course verification assistant. Your job is to verify if the provided course description matches the actual 
-                course offered by the specified institution. 
+                course. 
 
-                A course description must include a detailed summary of the course, including its objectives, topics covered, prerequisites, and relevance to the curriculum.
+                A course description must include a detailed summary of the course.
             
                 if not then return false
 
@@ -67,6 +67,7 @@ def validate_description_agent(course_code, course_description, open_ai_model, o
         
 
         response = openai.generate_response_using_tools(all_messages=messages, model=open_ai_model, response_tool=validate_tool)
+        print(f"validate description response :: {response}")
         answer = trueOrFalse(response.get('answer'))
         return answer
 
