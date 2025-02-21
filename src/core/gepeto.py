@@ -15,7 +15,7 @@ logger = get_logger("Gepeto")
 
 class GepetoForwarder:
     def __init__(self):
-        self.to_email = 'mert@hellogepeto.com'
+        self.to_email = 'mert@248.ai'
 
     def forward_email(self, lead_history, data):
 
