@@ -7,7 +7,7 @@ from src.common.prompts import responder_prompt,third_reply_prompt, research_pro
 from pytz import timezone
 
 
-logger = get_logger("Responder")    
+logger = get_logger(__name__)    
 
 ct_timezone = timezone('America/Chicago')
 

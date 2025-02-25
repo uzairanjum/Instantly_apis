@@ -30,7 +30,7 @@ class PackbackConfig:
             if not ten_question_prompt:
                 logger.info("sending email to :: %s", lead_history.get('email'))
                 logger.info("no ten question prompt found")
-                return self.send_email_by_lead_email(lead_history,data)
+                return self.respond_to_lead(lead_history,data)
 
             if lead_history.get('course_description') is None:
                     packback_response = packback_course_generator.packback_ten_questions(PackbackTenQuestionsRequest(
@@ -119,7 +119,7 @@ class PackbackConfig:
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
                 db.update({"flag": False}, lead_email)
-            return True
+            return merged_email
         except Exception as e:
             logger.error("Error sending email - %s", e)
             return False
@@ -202,7 +202,7 @@ class PackbackConfig:
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
                 db.update({"flag": False}, lead_email)
-            return True
+            return merged_email
         except Exception as e:
             logger.error("Error sending email - %s", e)
             return False
@@ -253,7 +253,7 @@ class PackbackConfig:
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
                 db.update({"flag": False}, lead_email)
-            return True
+            return email_body
         except Exception as e:
             logger.error("Error sending email - %s", e)
             return False

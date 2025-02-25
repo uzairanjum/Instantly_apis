@@ -7,7 +7,7 @@ import concurrent.futures
 from src.common.logger import get_logger
 from src.common.utils import get_campaign_details
 import time
-logger = get_logger('Recycled&RestoredLeads')
+logger = get_logger(__name__)
 
 db = SupabaseClient()
 mongodb_client = MongoDBClient()

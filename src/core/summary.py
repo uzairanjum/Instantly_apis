@@ -7,7 +7,7 @@ from src.common.enum import SummaryType
 from src.configurations.justcall import JustCallService
 from src.core.uploadLeads import added_leads_to_campaign
 
-logger = get_logger("Summary")
+logger = get_logger(__name__)
 db = SupabaseClient()
 
 jc = JustCallService()

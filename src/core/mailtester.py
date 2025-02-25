@@ -6,7 +6,7 @@ from src.common.utils import get_campaign_details
 from datetime import datetime
 import requests
 import time
-logger = get_logger("MailTester")
+logger = get_logger(__name__)
 
 db = SupabaseClient()
 

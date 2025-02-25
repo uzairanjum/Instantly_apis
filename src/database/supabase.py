@@ -7,7 +7,7 @@ from src.common.logger import get_logger
 import time
 import functools
 
-logger = get_logger("Supabase")
+logger = get_logger(__name__)
 
 def retry(max_attempts, delay=1):
     def decorator(func):

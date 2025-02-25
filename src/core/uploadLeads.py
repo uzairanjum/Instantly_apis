@@ -9,7 +9,7 @@ from src.configurations.justcall import JustCallService
 from src.database.mongodb import MongoDBClient
 import time
 
-logger = get_logger("Upload Leads")
+logger = get_logger(__name__)
 db = SupabaseClient()
 jc = JustCallService()
 mongodb_client = MongoDBClient()

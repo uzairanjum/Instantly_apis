@@ -65,8 +65,8 @@ class SalesforceClient:
             else:
                 return None
         except Exception as e:
-            print(e)
-            return False
+            logger.error(f"Error get_ae_manager_by_email: {e}")
+            return None
         
     def get_contact_by_email(self):
         try:
