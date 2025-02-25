@@ -20,6 +20,17 @@ class CommonSettings(BaseSettings):
     MONGODB_URI: str = Field(..., env='MONGODB_URI')
     TOTAL_LEADS: int = Field(..., env='TOTAL_LEADS')
     NEW: int = Field(..., env='NEW')
+    
+    ENVIRONMENT: str = Field(..., env='ENVIRONMENT')
+    SALESFORCE_ISSUER: str = Field(..., env='SALESFORCE_ISSUER')
+    SALESFORCE_SUBJECT: str = Field(..., env='SALESFORCE_SUBJECT')
+
+    SALESFORCE_SANDBOX_URL:str = "https://test.salesforce.com"
+    SALESFORCE_PROD_URL:str = "https://login.salesforce.com"
+    SALESFORCE_GRANT_TYPE:str = 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+    SALESFORCE_TASK_SUBJECT:str = "[248-AI][Email][Outbound]"
+
+
 
     class Config:
         env_file = ".env"

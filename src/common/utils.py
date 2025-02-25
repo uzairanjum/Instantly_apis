@@ -567,3 +567,20 @@ def calculate_gpt4o_cost(prompt_tokens, completion_tokens):
 
     total_cost = prompt_cost + completion_cost
     return total_cost
+
+def validate_lead_conversation(conversation):
+    total_outgoing_before_incoming = []
+    for item in conversation:
+        if item["role"] == "assistant":
+            total_outgoing_before_incoming.append(item)
+        else:
+            break
+
+    if len(total_outgoing_before_incoming) > 3 and len(total_outgoing_before_incoming) <= 6:
+        conversation = conversation[3:] 
+    elif len(total_outgoing_before_incoming) > 6 and len(total_outgoing_before_incoming) <= 9:
+        conversation = conversation[6:]
+    elif len(total_outgoing_before_incoming) > 9 and len(total_outgoing_before_incoming) <= 12:
+        conversation = conversation[9:]
+    
+    return conversation

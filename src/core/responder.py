@@ -16,10 +16,7 @@ ct_timezone = timezone('America/Chicago')
 def generate_ai_response(lead_history:dict, previous_messages:list ,open_api_key:str):
     
     try:
-
         open_ai = OpenAiConfig(open_api_key)
-
-
         logger.info("Generating AI response")
         AE_name = lead_history.get('AE') if lead_history.get('AE') else lead_history.get('CO')
         ai_message_history = [{"role": item["role"], "content": item["content"]} for item in previous_messages]

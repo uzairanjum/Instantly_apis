@@ -10,3 +10,4 @@ gspread
 pandas
 instructor
 pymongo
+pyjwt

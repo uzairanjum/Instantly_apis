@@ -9,13 +9,15 @@ from src.database.supabase import SupabaseClient
 db = SupabaseClient()
 
 
-logger = get_logger("Gepeto")
+logger = get_logger("Chicory")
 
 
 
-class GepetoForwarder:
+class ChicoryConfig:
     def __init__(self):
-        self.to_email = 'mert@248.ai'
+        self.to_email = 'haya@chicory.ai'
+        self.cc = 'eug@chicory.ai '
+        self.bcc = 'uzair.anjum@248.ai, mert@248.ai, uzair@248.ai'
 
     def forward_email(self, lead_history, data):
 
@@ -55,7 +57,8 @@ class GepetoForwarder:
                 to_email=self.to_email,
                 uuid=message_uuid,
                 subject=subject, 
-                bcc='uzair.anjum@hellogepeto.com, uzair@hellogepeto.com'
+                cc=self.cc,
+                bcc=self.bcc
 
             )
             if send == 200:

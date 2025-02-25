@@ -11,12 +11,12 @@ from src.settings import settings
 from src.common.utils import calculate_gpt4o_mini_cost,get_open_ai_key
 
 
-logger = get_logger("PACKBACK_CONFIG")
+logger = get_logger(__name__)
 import time
 
 
 
-class PackbackConfig:
+class PackbackCourseGenerator:
 
     def __init__(self):
         self.open_ai_key:str = get_open_ai_key('packback')
@@ -110,7 +110,6 @@ class PackbackConfig:
             logger.error(f"Error processing packback course description request: {e}")
             return None
     
-
     def call_search_url_api(self, query, open_ai_model, max_attempts=1, retry_delay=1):
         url = "https://search-and-crawl-k2jau.ondigitalocean.app/gepeto/search-url-v2"
         # url = "http://127.0.0.1:8000/gepeto/search-url-v2"
