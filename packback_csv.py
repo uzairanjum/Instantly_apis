@@ -16,11 +16,11 @@ db = SupabaseClient()
 def process_row(row, index):
     print(f"Processing row {index + 1}")
     email = row['Email']
-    firstName = row['firstName']
-    lastName = row['lastName']
-    courseCode = row['CourseCode']
+    firstName = row['First Name']
+    lastName = row['Last Name']
+    courseCode = row['FA24 Course Code']
     universityName = row['University Name']
-    ae = row['AE']
+    ae = row['Contact Owner']
 
 
 
@@ -71,7 +71,7 @@ def process_row(row, index):
 def process_csv_with_concurrency():
     try:
         logger.info("process_csv_with_concurrency is running")
-        input_file = 'packback_leads_3.csv'
+        input_file = 'packback_2025.csv'
 
         # Get offset and limit from the database
         cap = db.get_offset().data[0]

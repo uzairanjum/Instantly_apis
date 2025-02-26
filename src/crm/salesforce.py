@@ -60,17 +60,19 @@ class SalesforceClient:
                     FROM+Contact+WHERE+Email='{self.email}'"
 
             response = requests.get(url, headers=self.headers)
-            if response.status_code == 200:
+            if response.status_code == 200 and len(response.json().get('records', [])) > 0:
                 return self.extract_lead_info(response.json().get('records', [])[0])
             else:
-                return None
+                return {'lead_email': self.email, 'ae_first_name': 'Brian', 'ae_last_name': 'Anderson', 'ae_email': 'brian.anderson@packback.co',
+                        'ae_booking_link': 'https://hello.packback.co/c/salesopspackback-co', 'manager_email': 'uzair.anjum@248.ai'}
+    
         except Exception as e:
             logger.error(f"Error get_ae_manager_by_email: {e}")
             return None
         
     def get_contact_by_email(self):
         try:
-            url = f"{self.instance_url}/services/data/v61.0/query/?q=SELECT+Id+FROM+Contact+WHERE+Email='{self.email}'"
+            url = f"{self.instance_url}/services/data/v61.0/query/?q=SELECT+Id,Owner.Email,Owner.Id+FROM+Contact+WHERE+Email='{self.email}'"
             response = requests.get(url, headers=self.headers)
             if response.status_code == 200:
                 return response.json().get('records', [])
@@ -104,6 +106,7 @@ class SalesforceClient:
             contact = self.get_contact_by_email()
             if contact:
                 contact_id = contact[0].get('Id')
+                owner_id = contact[0].get('Owner', {}).get('Id')
             else:
                 return None
             
@@ -116,8 +119,8 @@ class SalesforceClient:
                 "Description": conversation,
                 "Outcome__c": outcome,
                 "Type": "Others",
+                "OwnerId": owner_id,  # Assign task to the contact owner
             }
-            
             url = f"{self.instance_url}/services/data/v61.0/sobjects/Task/"
         
             response = requests.post(url, headers=self.headers, json=payload)
