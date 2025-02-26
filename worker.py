@@ -162,26 +162,26 @@ if __name__ == "__main__":
         # update lead details
         scheduler.add_job(update_lead_details, 'interval', hours=1)
 
-        # update daily summary report
-        scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
+        # # update daily summary report
+        # scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
 
-        # packback
-        scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
+        # # packback
+        # scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
 
 
         # old leads dumps into mongodb
-        scheduler.add_job(restore_leads, 'interval', hours=24)
+        # scheduler.add_job(restore_leads, 'interval', hours=24)
 
         # check domain health
-        scheduler.add_job(update_domain_health_by_mailboxId, cron_trigger_at_09am)
+        # scheduler.add_job(update_domain_health_by_mailboxId, cron_trigger_at_09am)
 
 
         # add mail tester emails to campaign
-        scheduler.add_job(add_mail_tester_emails_to_campaign, cron_trigger_at_12pm)
+        # scheduler.add_job(add_mail_tester_emails_to_campaign, cron_trigger_at_12pm)
 
 
         # check campaign contacts
-        scheduler.add_job(check_campaign_contacts, cron_trigger_at_11_pm_daily)
+        # scheduler.add_job(check_campaign_contacts, cron_trigger_at_11_pm_daily)
         
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
