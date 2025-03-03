@@ -1,26 +1,23 @@
 from src.configurations.instantly import InstantlyAPI
 from src.database.supabase import SupabaseClient
-from src.common.utils import get_lead_details_history, get_campaign_details
-from src.common.logger import get_logger
-
-from src.configurations.justcall import JustCallService
-from pytz import timezone
-
 from src.tools.base import BaseConfig
 
+from src.common.utils import get_lead_details_history, get_campaign_details
+from src.common.logger import get_logger
+from pytz import timezone
 
 
 
 ct_timezone = timezone('US/Central')
-logger = get_logger("LeadHistory")
+logger = get_logger(__name__)
 
 
-jc = JustCallService()
 db = SupabaseClient()
 
 
 
 class LeadHistory:
+
     def __init__(self, lead_email, campaign_id, instantly_api_key):
         self.lead_email = lead_email
         self.campaign_id = campaign_id
@@ -70,6 +67,7 @@ class LeadHistory:
 
 def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = False):
     try:
+
         campaign_name, organization_name, instantly_api_key, open_api_key = get_campaign_details(campaign_id)
         if organization_name is None:
             return None
@@ -93,25 +91,23 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         data['flag'] = flag
         data['university_name'] = lead_history.get('university_name', None)
         data['recycled'] = False
+        
+        base_config = BaseConfig(organization_name, open_api_key, campaign_name, lead_history, data)
 
         if event =='reply_received' and data.get('status') == "Interested":
             logger.info("Interested lead - %s", lead_email)
-            jc.send_message(f"New interested lead -\n\n Organization - {organization_name}\n\nCampaign - {campaign_name}\n\nLead Email - {lead_email}\n\nConversation URL - {data['url']}")
-            organization_name = str(organization_name.strip()) 
-
-
-            # Validate the lead history and data
-            base_config = BaseConfig(organization_name, open_api_key, lead_history, data)
             base_config.respond_or_forward()
-        
-        if event == 'reply_received' and data.get('status') != "Not Interested":
-            base_config = BaseConfig(organization_name, open_api_key, lead_history, data)
+        elif event == 'reply_received' and data.get('status') != "Interested":
+            logger.info("Not Interested lead - %s", lead_email)
             base_config.update_crm()
+            
     
         instantly_lead.save_lead_history(data)
         logger.info("lead email processed - %s :: %s", index, lead_email)
         return data
+    
     except Exception as e:
         logger.error(f"Error get_data_from_instantly: {e}")
         return None
     
+

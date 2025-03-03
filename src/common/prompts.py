@@ -118,14 +118,14 @@ responder_prompt = """
     We are working with some of your colleagues at {university_name} with our AI powered discussion platform. We take care of coaching your students on the platform and support you with grading, so you can focus on the content itself.
     Curious, is encouraging student discussion part of your teaching objectives?
     User : Hi Pat, Would you please send me the names of some of the on campus faculty that are using your product?
-    Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {bdr_name} to share requested details.
+    Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {ae_first_name} to share requested details.
     Example 5:
     Assistant : Professor {lead_last_name} - {question_1}
     This is an example of the kind of questions your students can ask and answer in {course_name} on Packback.
     We are working with some of your colleagues at {university_name} with our AI powered discussion platform. We take care of coaching your students on the platform and support you with grading, so you can focus on the content itself.
     Curious, is encouraging student discussion part of your teaching objectives?
     User : Hi Pat, Please send me a little more detail about what kind of content you can offer, including cost to the students. Thank you
-    Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {bdr_name} to share requested details. I’ve also linked my colleague {ae_first_name}'s calendar <a href="{calendar_link}">here</a> for you to choose a time that works best for the team.
+    Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {ae_first_name} to share requested details. I’ve also linked my colleague {ae_first_name}'s calendar <a href="{calendar_link}">here</a> for you to choose a time that works best for the team.
     Example 6:
     Assistant : Professor {lead_last_name} - {question_1}
     This is an example of the kind of questions your students can ask and answer in {course_name} on Packback.
@@ -168,7 +168,7 @@ responder_prompt = """
     We are working with some of your colleagues at {university_name} with our AI powered discussion platform. We take care of coaching your students on the platform and support you with grading, so you can focus on the content itself.
     I put together a brief demo of a similar course using our platform. Can I show you how it would impact your class?
     User : Pat, Improving the efficiency of generating discussion and exam questions is nice, but a greater need is reducing the time and effort required to grade open-ended questions. Does your tool do that?
-    Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {bdr_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
+    Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {ae_first_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
     Note : Please generate response in email format and always use professor {lead_last_name} in the response. 
     ALWAYS use a calendar link in the response.
     NEVER  include the subject in the response. 
@@ -256,7 +256,7 @@ Would you be open to a 15-minute conversation to explore further?
 
 P.S. Feel free to forward this note to another colleague, or let me know if you don’t want to hear from us and I’ll take you off our list. Thank you!
 User : Hi Pat, Would you please send me the names of some of the on campus faculty that are using your product?
-Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {bdr_name} to share requested details.
+Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {ae_first_name} to share requested details.
 Example 5:
 Assistant : Professor {lead_last_name}  - {first_sentence}
 Curious, do you use your own publications as discussion materials in the courses you teach? I’m asking because we might be able to make that easier for you with our student discussion platform Packback. 
@@ -266,7 +266,7 @@ Would you be open to a 15-minute conversation to explore further?
 
 P.S. Feel free to forward this note to another colleague, or let me know if you don’t want to hear from us and I’ll take you off our list. Thank you!
 User : Hi Pat, Please send me a little more detail about what kind of content you can offer, including cost to the students. Thank you
-Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {bdr_name} to share requested details. I’ve also linked my colleague {ae_first_name}'s calendar <a href="{calendar_link}">here</a> for you to choose a time that works best for the team.
+Assistant: Thanks for getting back to me, Professor {lead_last_name}! I am looping in my colleague {ae_first_name} to share requested details. I’ve also linked my colleague {ae_first_name}'s calendar <a href="{calendar_link}">here</a> for you to choose a time that works best for the team.
 Example 6:
 Assistant : Professor {lead_last_name}  - {first_sentence}
 Curious, do you use your own publications as discussion materials in the courses you teach? I’m asking because we might be able to make that easier for you with our student discussion platform Packback. 
@@ -328,11 +328,11 @@ Would you be open to a 15-minute conversation to explore further?
 P.S. Feel free to forward this note to another colleague, or let me know if you don’t want to hear from us and I’ll take you off our list. Thank you!
 
 User : Pat, Improving the efficiency of generating discussion and exam questions is nice, but a greater need is reducing the time and effort required to grade open-ended questions. Does your tool do that?
-Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {bdr_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
+Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {ae_first_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
 Note : Please generate response in email format and always use professor {lead_last_name} in the response and Do not include subject in the response
 
 User : Greetings Pat~ I would love to chat virtually more about your thoughts and this opportunity. Please send me three day/time options, starting next week 1/13/25, and we can go from there. I will confirm with a Zoom link calendar invite:) Hoping to connect soon
-Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {bdr_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
+Assistant:Hi Professor {lead_last_name}, absolutely yes. I'm copying my colleague {ae_first_name}, alternatively feel free to grab a slot from our calendar linked <a href="{calendar_link}">here</a>. Excited to connect! Pat
 
 Note : Please generate response in email format and always use professor {lead_last_name} in the response and Do not include subject in the response and use calendar link in the response not own zoom slot.
 

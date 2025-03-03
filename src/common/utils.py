@@ -10,6 +10,7 @@ from src.configurations.googleSheet import GoogleSheetClient
 import pandas as pd
 import re
 import pytz
+from src.crm.salesforce import SalesforceClient
 
 
 
@@ -354,23 +355,18 @@ def three_days_summary_report(campaign_id: str, campaign_name: str, organization
     except Exception as e:
         logger.error(f"Error three_days_summary_report: {e}")
 
-def get_ae_data(ae_full_name):
-    try:
-        df = pd.read_csv("manager_ae_bdr.csv")
-        ae_calendar_link = df.loc[df["AE Full Name"] == ae_full_name, "AE Calendar Links"].values[0]
-        bdr_email = df.loc[df["AE Full Name"] == ae_full_name, "BDR Email"].values[0]
-        manager_email = df.loc[df["AE Full Name"] == ae_full_name, "Manager Email"].values[0]
-        bdr_name = df.loc[df["AE Full Name"] == ae_full_name, "BDR First Name"].values[0]
 
-        return {
-            "bcc": f"{manager_email}, jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com",
-            "cc": f"{bdr_email}",
-            "calendar_link": ae_calendar_link,
-            "bdr_name":bdr_name.strip()
-        }
+def get_ae_data_by_email(email:str):
+    try:
+        sf = SalesforceClient(email)
+        lead_ae_manager = sf.get_ae_manager_by_email()
+        if not lead_ae_manager:
+            return {'lead_email': email, 'ae_first_name': 'Anh', 'ae_last_name': 'Pham', 'ae_email': 'anh@packback.co', 
+                    'ae_booking_link': 'https://hello.packback.co/c/salesopspackback-co', 'manager_email': 'salesops@packback.co.invalid'}
+        return lead_ae_manager
     except Exception as e:
-        logger.error(f"Error get_ae_data: {e}")
-        return { "bcc": f" jimmy.montchal@packback.co, uzair@hellogepeto.com, mert@hellogepeto.com", "cc": "", "calendar_link": "", "bdr_name":""}
+        logger.error(f"Error get_ae_data_by_email: {e}")
+        return {}
 
 def format_http_url(s):
     try:
@@ -537,6 +533,55 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
     html += '</div>'
 
     return html
+
+
+
+def construct_email_text_from_history(messages:list, lead_email:str, account_email:str):
+    data = []
+
+    for message in messages:
+        if message.get('role') == 'user':
+            from_account = lead_email
+            to_account = account_email
+        else:
+            from_account = account_email
+            to_account = lead_email
+
+        body = message.get('content', '')
+        # Remove any HTML/div tags from the body
+        body = body.replace('<br>', '\n')
+        body = re.sub(r'<[^>]+>', '', body)
+        body = body.replace('&nbsp;', ' ')
+        
+        body = body.strip()
+
+        data.append({
+            "from": from_account,
+            "to": to_account,
+            "body": body,
+            "cc": message.get('cc') or '',
+            "bcc": message.get('bcc') or '',
+            "date": convert_timestamp_for_email_thread_history(message['timestamp']),
+        })
+
+    # Construct the text for each message, newest to oldest
+    thread_text = ""
+    for message in data:
+        message_text = f"""
+        Date: {message['date']}
+        From: {message['from']}
+        To: {message['to']}
+        Cc: {message['cc']}
+        Bcc: {message['bcc']}
+
+        {message['body']}
+
+        -------------------
+
+"""
+        thread_text = message_text + thread_text
+
+    return thread_text
 
 def convert_timestamp_for_email_thread_history(timestamp):
     try:

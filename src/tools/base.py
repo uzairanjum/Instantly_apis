@@ -1,22 +1,28 @@
-from src.common.utils import get_logger
+
 from src.tools.gepeto import GepetoConfig
 from src.tools.chicory import ChicoryConfig
 from src.tools.packback import PackbackConfig   
 from src.common.enum import Client
+from src.crm.salesforce import SalesforceClient
+from src.common.utils import construct_email_text_from_history
+from src.common.logger import get_logger
+from src.configurations.justcall import JustCallService
 
+jc = JustCallService()
 logger = get_logger(__name__)
 
 
 class BaseConfig:
-    def __init__(self, organization_name:str, open_ai_key:str, lead_history:dict, data:dict):
-        self.organization_name = organization_name
+    def __init__(self, organization_name:str, open_ai_key:str,campaign_name:str, lead_history:dict, data:dict):
+        self.organization_name = str(organization_name.strip()) 
         self.open_ai_key = open_ai_key
+        self.campaign_name = str(campaign_name.strip())
         self.lead_history = lead_history
         self.data = data
 
     def respond_or_forward(self):
-
-
+        jc.send_message(f"New interested lead -\n\n Organization - {self.organization_name}\n\nCampaign - {self.campaign_name}\n\nLead Email - {self.data['lead_email']}\n\nConversation URL - {self.data['url']}")
+    
         if self.organization_name == Client.GEPETO.value:
             logger.info(f"forwarding email for {self.organization_name}")
             GepetoConfig().forward_email(self.lead_history, self.data)
@@ -27,24 +33,38 @@ class BaseConfig:
 
         if self.organization_name == Client.PACKBACK.value:
             packback_config = PackbackConfig(self.open_ai_key)
-
             if self.data.get('incoming') == 1 and self.data.get('outgoing') % 3 == 0:
-                if self.data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
-                    packback_config.respond_to_lead(self.lead_history, self.data)
-                else:
-                    packback_config.third_outgoing_email(self.lead_history, self.data)
-
-
+                packback_config.third_outgoing_email(self.lead_history, self.data)
             elif self.data.get('incoming') == 1 and self.data.get('outgoing') % 3 != 0:
                 packback_config.respond_to_lead(self.lead_history, self.data)
             else:
                 logger.info("Need to check cc email if not cc'd then forward")
                 packback_config.forward_email(self.lead_history, self.data)
+
+            
+            self.update_salesforce_task()
+
+
     
+        
     def update_crm(self):
 
         if self.organization_name == Client.PACKBACK.value:
+            self.update_salesforce_task()
+        
+        if self.organization_name == Client.GEPETO.value:
             pass
+
+        if self.organization_name == Client.CHICORY.value:
+            pass
+
+
+    def update_salesforce_task(self):
+        salesforce_client = SalesforceClient(self.data.get('lead_email'))
+        conversation =  self.data.get('conversation')
+        conversation = construct_email_text_from_history(conversation)
+        salesforce_client.create_update_task(conversation, self.data.get('status'))
+
 
 
 

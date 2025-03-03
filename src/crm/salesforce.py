@@ -13,7 +13,7 @@ class SalesforceClient:
         environment = settings.ENVIRONMENT
         if not environment:
             raise Exception("Environment is not set")
-        logger.info(f"Environment: {environment}")
+        # logger.info(f"Environment: {environment}")
         
         KEY_FILE = 'gepeto.key'
         AUDIENCE = settings.SALESFORCE_SANDBOX_URL if environment == 'sandbox' else settings.SALESFORCE_PROD_URL
@@ -32,8 +32,7 @@ class SalesforceClient:
             'exp': int(time.time()) + 30000000,
             'aud': AUDIENCE,
             'sub': SUBJECT,
-        }
-        
+        }        
         encoded_jwt = jwt.encode(claim, private_key, algorithm='RS256')
         r = requests.post(AUDIENCE + '/services/oauth2/token',
             data = {'grant_type': GRANT_TYPE, 'assertion': encoded_jwt})
@@ -43,8 +42,7 @@ class SalesforceClient:
         self.token = r.json().get('access_token')
         self.instance_url= r.json().get('instance_url')
 
-        logger.info(f"Salesforce token: {self.token}")
-        logger.info(f"Salesforce instance url: {self.instance_url}")
+        # logger.info(f"Salesforce instance url: {self.instance_url}")
        
 
         self.headers = {
@@ -63,12 +61,13 @@ class SalesforceClient:
             if response.status_code == 200 and len(response.json().get('records', [])) > 0:
                 return self.extract_lead_info(response.json().get('records', [])[0])
             else:
-                return {'lead_email': self.email, 'ae_first_name': 'Brian', 'ae_last_name': 'Anderson', 'ae_email': 'brian.anderson@packback.co',
-                        'ae_booking_link': 'https://hello.packback.co/c/salesopspackback-co', 'manager_email': 'uzair.anjum@248.ai'}
+                return {'lead_email': self.email, 'ae_first_name': 'Nikki', 'ae_last_name': 'Pulido', 'ae_email': 'nikki.pulido@packback.co',
+                        'ae_booking_link': 'https://hello.packback.co/c/Nicole_Pulido', 'manager_email': 'kelsey@packback.co'}
     
         except Exception as e:
             logger.error(f"Error get_ae_manager_by_email: {e}")
-            return None
+            return {'lead_email': self.email, 'ae_first_name': 'Nikki', 'ae_last_name': 'Pulido', 'ae_email': 'nikki.pulido@packback.co',
+                        'ae_booking_link': 'https://hello.packback.co/c/Nicole_Pulido', 'manager_email': 'kelsey@packback.co'}
         
     def get_contact_by_email(self):
         try:
@@ -92,7 +91,7 @@ class SalesforceClient:
             response = requests.get(url, headers=self.headers)
             if response.status_code == 200:
                 tasks = response.json().get('records', [])
-                logger.info(f"tasks: {len(tasks)}")
+                logger.info(f"total tasks: {len(tasks)}")
                 return self.filter_tasks_by_subject(tasks)
             else:
                 logger.error(f"Error getting contact tasks: {response.status_code} - {response.text}")
@@ -119,26 +118,23 @@ class SalesforceClient:
                 "Description": conversation,
                 "Outcome__c": outcome,
                 "Type": "Others",
-                "OwnerId": owner_id,  # Assign task to the contact owner
+                "OwnerId": owner_id, 
             }
             url = f"{self.instance_url}/services/data/v61.0/sobjects/Task/"
         
             response = requests.post(url, headers=self.headers, json=payload)
+            logger.info(f"response: {response.json()}")
             return response.json()
         except Exception as e:
             logger.error(f"Error creating task: {e}")
             return False
 
-    def update_task(self, conversation):
+    def update_task(self, conversation, outcome, task_id):
         try:
-            task_id = self.get_task_id()
-            logger.info(f"task_id: {task_id}")
-            if not task_id:
-                return False
             url = f"{self.instance_url}/services/data/v61.0/sobjects/Task/{task_id}"
-            response = requests.patch(url, headers=self.headers, json={"Description": conversation})
+            response = requests.patch(url, headers=self.headers, json={"Description": conversation, "Outcome__c": outcome})
             if response.status_code == 204:
-                return True  # 204 means success but no content returned
+                return True 
             else:
                 logger.error(f"Error updating task: {response.status_code} - {response.text}")
                 return False
@@ -164,11 +160,26 @@ class SalesforceClient:
     def get_task_id(self):
         try:
             tasks = self.get_contact_tasks()
-            logger.info(f"tasks: {tasks}")
             if tasks:
+                logger.info(f"Related task found for {self.email}")
                 return tasks[0].get('Id')
             else:
-                return False
+                logger.info(f"No related tasks found for {self.email}")
+                return None
         except Exception as e:
             logger.error(f"Error getting task id: {e}")
-            return False
+            return None
+    
+    def create_update_task(self, conversation, outcome):
+        try:
+            task_id = self.get_task_id()
+            logger.info(f"task_id: {task_id}")
+            if not task_id:
+                logger.info(f"Creating task for {self.email}")
+                return self.create_task(conversation, outcome)
+            else:
+                logger.info(f"Updating task for {self.email}")
+                return self.update_task(conversation, outcome, task_id)
+        except Exception as e:
+            logger.error(f"Error creating update task: {e}")
+            return None
