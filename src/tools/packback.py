@@ -17,8 +17,7 @@ db = SupabaseClient()
 
 class PackbackConfig:
     def __init__(self, open_ai_key:str):
-        self.open_ai_key = open_ai_key
-
+        self.open_api_key= open_ai_key
 
     def third_outgoing_email(self,lead_history, data):
         try:
@@ -134,13 +133,13 @@ class PackbackConfig:
             response = None
 
 
-            if data.get('campaign_id') == 'ecdc673c-3d90-4427-a556-d39c8b69ae9f':
-                logger.info("generating ai response")
-                response = generate_ai_response (lead_history, conversation, self.open_api_key)
+            # if data.get('campaign_id') == 'ecdc673c-3d90-4427-a556-d39c8b69ae9f':
+            #     logger.info("generating ai response")
+            response = generate_ai_response (lead_history, conversation, self.open_api_key)
 
-            elif data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
-                logger.info("generating research response")
-                response = generate_research_response(lead_history, conversation, self.open_api_key)
+            # elif data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
+            #     logger.info("generating research response")
+            #     response = generate_research_response(lead_history, conversation, self.open_api_key)
             
             
             if response is None:

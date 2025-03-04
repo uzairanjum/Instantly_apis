@@ -36,7 +36,7 @@ def generate_ai_response(lead_history:dict, previous_messages:list ,open_api_key
             "timestamp": previous_messages[-1].get('timestamp')
         }  
     except Exception as e:
-        logger.error(f"Error make_draft_email: {e}")
+        logger.error(f"Error responder: {e}")
         return {}
 
 def generate_research_response(lead_history:dict, previous_messages:list, open_api_key:str ):
