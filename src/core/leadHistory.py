@@ -1,7 +1,7 @@
 from src.configurations.instantly import InstantlyAPI
 from src.database.supabase import SupabaseClient
 from src.tools.base import BaseConfig
-
+from src.common.enum import Client
 from src.common.utils import get_lead_details_history, get_campaign_details
 from src.common.logger import get_logger
 from pytz import timezone
@@ -67,6 +67,7 @@ class LeadHistory:
 
 def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = False):
     try:
+        updated_data = None
 
         campaign_name, organization_name, instantly_api_key, open_api_key = get_campaign_details(campaign_id)
         if organization_name is None:
@@ -97,12 +98,23 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         if event =='reply_received' and data.get('status') == "Interested":
             logger.info("Interested lead - %s", lead_email)
             base_config.respond_or_forward()
+
+            if organization_name == Client.PACKBACK.value:
+                updated_data = updated_lead_data(lead_email, campaign_id, open_api_key)
+                if updated_data is not None:
+                    base_config.update_salesforce_task(updated_data)
+                else:
+                    base_config.update_salesforce_task(data)
+
         elif event == 'reply_received' and data.get('status') != "Interested":
             logger.info("Not Interested lead - %s", lead_email)
             base_config.update_crm()
             
-    
-        instantly_lead.save_lead_history(data)
+        if updated_data is not None:
+            instantly_lead.save_lead_history(updated_data)
+        else:
+            instantly_lead.save_lead_history(data)
+
         logger.info("lead email processed - %s :: %s", index, lead_email)
         return data
     
@@ -111,3 +123,18 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         return None
     
 
+def updated_lead_data(lead_email, campaign_id, open_ai_key):
+    try:
+        instantly_lead = LeadHistory(lead_email, campaign_id, open_ai_key)
+
+        logger.info("lead found :: %s", lead_email)
+        lead_emails = instantly_lead.get_lead_emails()
+        if lead_emails is None:
+            return None
+            
+        logger.info("lead email history found :: %s", lead_email)
+        data =  get_lead_details_history(lead_email, campaign_id, lead_emails, open_ai_key)
+        return data
+    except Exception as e:
+        logger.error(f"Error updated_lead_data: {e}")
+        return None

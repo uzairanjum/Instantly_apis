@@ -42,7 +42,6 @@ class BaseConfig:
                 packback_config.forward_email(self.lead_history, self.data)
 
             
-            self.update_salesforce_task()
 
 
     
@@ -50,7 +49,7 @@ class BaseConfig:
     def update_crm(self):
 
         if self.organization_name == Client.PACKBACK.value:
-            self.update_salesforce_task()
+            self.update_salesforce_task(self.data)
         
         if self.organization_name == Client.GEPETO.value:
             pass
@@ -59,11 +58,11 @@ class BaseConfig:
             pass
 
 
-    def update_salesforce_task(self):
-        salesforce_client = SalesforceClient(self.data.get('lead_email'))
-        conversation =  self.data.get('conversation')
+    def update_salesforce_task(self, updated_data):
+        salesforce_client = SalesforceClient(updated_data.get('lead_email'))
+        conversation =  updated_data.get('conversation')
         conversation = construct_email_text_from_history(conversation)
-        salesforce_client.create_update_task(conversation, self.data.get('status'))
+        salesforce_client.create_update_task(conversation, updated_data.get('status'))
 
 
 
