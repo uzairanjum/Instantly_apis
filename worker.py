@@ -141,8 +141,9 @@ def add_mail_tester_emails_to_campaign():
 
 def update_salesforce_tasks():
     try:
+        update_lead_details()
         logger.info("update_salesforce_tasks is running")
-        updated_at = (datetime.now() - timedelta(minutes=20)).isoformat()
+        updated_at = (datetime.now() - timedelta(minutes=45)).isoformat()
         db = SupabaseClient()
         for campaign_id in ['7df15bbb-4743-4856-a419-dca02803cec7', 'bda49631-4c89-4fb2-a860-2800df0f223f']:
             result = db.get_all_by_campaign_id(campaign_id, updated_at).data
@@ -181,8 +182,8 @@ if __name__ == "__main__":
         logger.info("scheduler is running")
 
         # update lead details
-        scheduler.add_job(update_lead_details, 'interval', minutes=5)
-        scheduler.add_job(update_salesforce_tasks, 'interval', hours=10)
+        # scheduler.add_job(update_lead_details, 'interval', minutes=5)
+        scheduler.add_job(update_salesforce_tasks, 'interval', minutes=30)
 
         # # update daily summary report
         # scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
