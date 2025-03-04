@@ -112,8 +112,8 @@ class PackbackConfig:
                 to_email=lead_email,
                 uuid=message_uuid,
                 subject=subject, 
-                cc=cc,
-                bcc=bcc
+                cc=f"{cc},{email_cc}",
+                bcc=f"{bcc},{email_bcc}"
             )
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
@@ -195,8 +195,8 @@ class PackbackConfig:
                 to_email=lead_email,
                 uuid=message_uuid,
                 subject=subject, 
-                cc=cc,
-                bcc=bcc
+                cc=f"{cc},{email_cc}",
+                bcc=f"{bcc},{email_bcc}"
             )
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
