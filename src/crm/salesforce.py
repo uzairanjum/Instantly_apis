@@ -59,8 +59,10 @@ class SalesforceClient:
 
             response = requests.get(url, headers=self.headers)
             if response.status_code == 200 and len(response.json().get('records', [])) > 0:
+                logger.info(f"response if: {response.json()}")
                 return self.extract_lead_info(response.json().get('records', [])[0])
             else:
+                logger.info(f"response else: {response.json()}")
                 return {'lead_email': self.email, 'ae_first_name': 'Nikki', 'ae_last_name': 'Pulido', 'ae_email': 'nikki.pulido@packback.co',
                         'ae_booking_link': 'https://hello.packback.co/c/Nicole_Pulido', 'manager_email': 'kelsey@packback.co'}
     

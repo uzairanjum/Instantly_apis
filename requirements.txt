@@ -11,3 +11,4 @@ pandas
 instructor
 pymongo
 pyjwt
+cryptography
