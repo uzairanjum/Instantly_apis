@@ -435,7 +435,7 @@ def get_lead_details_history(lead_email: str, campaign_id,  all_emails: list, op
         response = open_ai.generate_response_using_tools(all_messages= formatted_history, response_tool=response_tool)
         answer = response.get('answer')
     last_timestamp_ = message_history[-1].get('timestamp')
-    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": answer, "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, 
+    data = {"last_contact": last_timestamp_,"lead_email": lead_email, "sent_date": last_timestamp, "lead_status": lead_status, "reply": lead_reply, "status": answer.replace(" ", ""), "outgoing": outgoing_count, "incoming": incoming_count,  "from_account": from_email,"conversation": message_history, "updated_at":timestamp, "campaign_id": campaign_id, 
             "first_reply_after":first_reply_after, "url" : f"https://mail-tester-frontend.vercel.app/conversation/{lead_email}" , "message_uuid": message_uuid, "cc": cc, "bcc": bcc, 'recycled': False}
     return data
 

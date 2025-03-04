@@ -11,7 +11,8 @@ from rq import Queue, Worker
 from src.core.summary import Summary
 from src.core.restoreLeads import restore_leads_from_db
 from src.core.mailtester import update_domain_health_by_mailboxId, add_mail_tester_emails_to_campaign_contacts
-
+from src.crm.salesforce import SalesforceClient
+from src.common.utils import construct_email_text_from_history
 
 
 
@@ -138,6 +139,23 @@ def add_mail_tester_emails_to_campaign():
         logger.exception("Exception occurred add_mail_tester_emails_to_campaign_contacts %s", e)
 
 
+def update_salesforce_tasks():
+    try:
+        for campaign_id in ['7df15bbb-4743-4856-a419-dca02803cec7', 'bda49631-4c89-4fb2-a860-2800df0f223f']:
+            result = db.get_all_by_campaign_id(campaign_id).data
+            for row in result:
+                email = row.get('lead_email')
+                status = row.get('status').replace(" ", "")
+                from_account = row.get('from_account')
+                conversation = row.get('conversation')
+                conversation = construct_email_text_from_history(conversation, email, from_account)
+                sf = SalesforceClient(email)
+                sf.create_update_task(conversation, status)
+                time.sleep(1)
+
+    except Exception as e:
+        logger.exception("Exception occurred update_salesforce_tasks %s", e)
+
 ##################################################################
 ##### scheduler for  initial_message/follow_up/send_summary  #####
 ##################################################################
@@ -161,6 +179,7 @@ if __name__ == "__main__":
 
         # update lead details
         scheduler.add_job(update_lead_details, 'interval', hours=1)
+        scheduler.add_job(update_salesforce_tasks, 'interval', hours=1)
 
         # # update daily summary report
         # scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
