@@ -22,7 +22,7 @@ class PackbackConfig:
     def third_outgoing_email(self,lead_history, data):
         try:
             conversation = data.get('conversation')
-            ten_question_prompt = validate_lead_last_reply(conversation, self.open_ai_key)
+            ten_question_prompt = validate_lead_last_reply(conversation, self.open_api_key)
             packback_response = None
 
             logger.info("ten_question_prompt for lead - %s :: %s", lead_history.get('email'), ten_question_prompt)
@@ -45,7 +45,9 @@ class PackbackConfig:
             else:
                 packback_response = packback_course_generator.ten_questions_generator(TenQuestionsGeneratorRequest(course_name=lead_history.get('course_name'), \
                     course_description=lead_history.get('course_description'), open_ai_model="gpt-4o-mini", \
-                    question1=lead_history.get('question_1'), question2=lead_history.get('question_2'), question3=lead_history.get('question_3'), question4=lead_history.get('question_4')))
+                    question1=lead_history.get('question_1'), question2=lead_history.get('question_2'), question3=lead_history.get('question_3'), question4=lead_history.get('question_4')), open_ai_key = self.open_api_key
+                    
+                    )
                 
             if packback_response is None:
                 logger.info("no response from search and crawl. Now forwarding email")
@@ -104,7 +106,14 @@ class PackbackConfig:
             </div>
             """
 
-
+            if email_cc is not None:
+                all_cc = f"{cc},{email_cc}"
+            else:
+                all_cc = cc
+            if email_bcc is not None:
+                all_bcc = f"{bcc},{email_bcc}"
+            else:
+                all_bcc = bcc
 
             send = instantly.send_reply(
                 message=merged_email,
@@ -112,8 +121,8 @@ class PackbackConfig:
                 to_email=lead_email,
                 uuid=message_uuid,
                 subject=subject, 
-                cc=f"{cc},{email_cc}",
-                bcc=f"{bcc},{email_bcc}"
+                cc=all_cc,
+                bcc=all_bcc
             )
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
@@ -136,7 +145,7 @@ class PackbackConfig:
             # if data.get('campaign_id') == 'ecdc673c-3d90-4427-a556-d39c8b69ae9f':
             #     logger.info("generating ai response")
             response = generate_ai_response (lead_history, conversation, self.open_api_key)
-
+            logger.info("response :: %s", response)
             # elif data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
             #     logger.info("generating research response")
             #     response = generate_research_response(lead_history, conversation, self.open_api_key)
@@ -186,8 +195,14 @@ class PackbackConfig:
                 {email_body}
             </div>
             """
-
-
+            if email_cc is not None:
+                all_cc = f"{cc},{email_cc}"
+            else:
+                all_cc = cc
+            if email_bcc is not None:
+                all_bcc = f"{bcc},{email_bcc}"
+            else:
+                all_bcc = bcc
 
             send = instantly.send_reply(
                 message=merged_email,
@@ -195,9 +210,10 @@ class PackbackConfig:
                 to_email=lead_email,
                 uuid=message_uuid,
                 subject=subject, 
-                cc=f"{cc},{email_cc}",
-                bcc=f"{bcc},{email_bcc}"
+                cc=all_cc,
+                bcc=all_bcc
             )
+            logger.info("send ------------------->>>>> :: %s", send)
             if send == 200:
                 logger.info("Email sent successfully - %s", lead_email)
                 db.update({"flag": False}, lead_email)

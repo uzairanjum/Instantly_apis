@@ -38,7 +38,7 @@ class PackbackCourseGenerator:
         if course_description_response:
             return self.ten_questions_generator(TenQuestionsGeneratorRequest(course_name=course_description_response.course_name, \
                 course_description=course_description_response.course_description, open_ai_model=request.open_ai_model, \
-                question1=request.question1, question2=request.question2, question3=request.question3, question4=request.question4 ),open_ai_key=self.open_ai_key)
+                question1=request.question1, question2=request.question2, question3=request.question3, question4=request.question4 ), open_ai_key=self.open_ai_key)
         return None
 
     def four_questions_generator(self, request: QuestionGeneratorRequest, open_ai_key:str) -> Union[PackbackCourseQuestionsResponse, None]:

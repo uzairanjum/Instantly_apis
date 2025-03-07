@@ -32,6 +32,7 @@ class BaseConfig:
             ChicoryConfig().forward_email(self.lead_history, self.data)
 
         if self.organization_name == Client.PACKBACK.value:
+            logger.info("Packback responder")
             packback_config = PackbackConfig(self.open_ai_key)
             if self.data.get('incoming') == 1 and self.data.get('outgoing') % 3 == 0:
                 logger.info("Packback respond to lead after 3rd reply")
