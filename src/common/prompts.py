@@ -17,7 +17,7 @@ packback_prompt = """
                 
                 
                 
-                Not Interested: The lead explicitly states they are not interested or declines the offer But they do not actually say to stop contacting them.
+                NotInterested: The lead explicitly states they are not interested or declines the offer But they do not actually say to stop contacting them.
 
                 Not Interested Example messages:
                 "user":" have retired so not longer teaching."
@@ -32,7 +32,7 @@ packback_prompt = """
                 
                 
                 
-                Out of Office: The lead indicates they are unavailable, either by being out of the office, on leave, or providing an alternative contact due to their absence.
+                OutOfOffice: The lead indicates they are unavailable, either by being out of the office, on leave, or providing an alternative contact due to their absence.
 
                 Out of Office Example messages:
                 "user":"I am on sabbatical during the fall 2024 semester."
@@ -51,7 +51,6 @@ packback_prompt = """
                 "user":"With thanks, I'm not sure how much longer I'll be teaching at Yale before I graduate, so feel free to take me off your list. Best wishes,"
                 "user":"Please take me off your email list.  I've received too many e-mails and I'm not interested in what you're offering. "
                 "user":"not relevant for me-- but thanks.  good luck
-"
                                 
                 """
 

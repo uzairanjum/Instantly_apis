@@ -39,6 +39,7 @@ def update_lead_details():
         
         while True:
             all_leads = db.get_all_false_flag(offset=offset, limit=limit).data
+            print(len(all_leads))
             # all_leads = db.get_all_leads_by_campaign(offset=offset, limit=limit).data
 
             if len(all_leads) == 0: 
@@ -61,39 +62,6 @@ def update_lead_details():
         logger.exception("Exception occurred get_lead_details %s", e)
 
 
-def update_daily_summary_report():
-    try:
-        logger.info("update_daily_summary_report is running")
-        for organization_id in [1, 3, 4]:
-            all_campaigns = db.get_all_campaigns(organization_id).data
-            for campaign in all_campaigns:
-                logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}")
-                summary = Summary(campaign_id=campaign.get("campaign_id"))
-                summary.update_daily_summary()
-    except Exception as e:
-        logger.exception("Exception occurred update_daily_summary_report %s", e)
-
-def three_days_summary_report():
-    try:
-        logger.info("three_days_summary_report is running")
-        for organization_id in [1,3, 4]:
-            all_campaigns = db.get_all_campaigns(organization_id).data
-            for campaign in all_campaigns:
-                logger.info(f"campaign {campaign.get("campaign_id")}, {campaign.get("campaign_name")}, {organization_id}\n\n")
-                summary = Summary(campaign_id=campaign.get("campaign_id"))
-                summary.three_days_summary_report()
-    except Exception as e:
-        logger.exception("Exception occurred update_daily_summary_report %s", e)
-
-def update_weekly_summary_report(organization_id):
-    try:
-        logger.info("update_weekly_summary_report is running")
-        all_campaigns = db.get_all_campaigns(organization_id).data
-        for campaign in all_campaigns:
-            summary = Summary(campaign_id=campaign.get("campaign_id"))
-            summary.update_weekly_summary()
-    except Exception as e:
-        logger.exception("Exception occurred update_weekly_summary_report %s", e)
 
 
 def check_campaign_contacts():
@@ -142,10 +110,11 @@ def add_mail_tester_emails_to_campaign():
 def update_salesforce_tasks():
     try:
         logger.info("update_salesforce_tasks is running")
-        updated_at = (datetime.now() - timedelta(minutes=30)).isoformat()
+        updated_at = (datetime.now() - timedelta(hours=12)).isoformat()
         db = SupabaseClient()
         for campaign_id in ['7df15bbb-4743-4856-a419-dca02803cec7', 'bda49631-4c89-4fb2-a860-2800df0f223f']:
             result = db.get_all_by_campaign_id(campaign_id, updated_at).data
+            print(len(result))
             for row in result:
                 email = row.get('lead_email')
                 status = row.get('status').replace(" ", "")
@@ -179,11 +148,11 @@ except Exception as e:
 if __name__ == "__main__":
     try:
         logger.info("scheduler is running")
-        # update_lead_details()
+
 
         # update lead details
         scheduler.add_job(update_lead_details, 'interval', minutes=10)
-        scheduler.add_job(update_salesforce_tasks, 'interval', minutes=15)
+        scheduler.add_job(update_salesforce_tasks, 'interval', minutes=20)
 
         # # update daily summary report
         # scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
