@@ -80,6 +80,9 @@ def process_csv_with_concurrency():
         start_row = offset
         end_row = offset + limit
 
+        if limit == 0:
+            return
+
         with open(input_file, 'r') as infile:
             reader = csv.DictReader(infile)
 
@@ -88,6 +91,8 @@ def process_csv_with_concurrency():
             total_rows = len(rows)
             end_row = min(end_row, total_rows)
 
+            if total_rows < offset:
+                return
             # Process rows concurrently using ThreadPoolExecutor
             with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {}
