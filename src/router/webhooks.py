@@ -16,8 +16,8 @@ instantly_queue = Queue("instantly_queue", connection=RedisConfig().redis)
 @instantly_webhook_router.post('/incoming')
 def incoming_sms(data:dict):        
     try:
+        logger.info("Incoming webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
         if data.get('event_type') == "reply_received":
-            logger.info("Incoming webhook  - %s - %s", data.get('lead_email'), data.get('campaign_id'))
             instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'), 'reply_received')
             # return get_data_from_instantly(data.get('lead_email'), data.get('campaign_id'),'reply_received')
     finally:
