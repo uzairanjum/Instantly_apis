@@ -34,7 +34,12 @@ def outgoing_sms(data:dict):
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
     
-
+@instantly_webhook_router.post('/all-events')
+def all_events(data:dict):        
+    try:
+        logger.info("All events webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
+    finally:
+        return JSONResponse(content={"status": "success"}, status_code=200)
 
 @instantly_webhook_router.post('/test-redis')
 def test_redis(request:dict):
