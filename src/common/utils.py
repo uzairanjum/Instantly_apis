@@ -74,6 +74,10 @@ def format_email_history(all_emails: list):
             incoming_count += 1
             cc = message.get('cc_address_email_list')
             bcc = message.get('bcc_address_email_list')
+
+        last_from_account = message['from_address_email']
+        last_to_account = message.get('to_address_email_list')
+
         
         if not lead_reply:
             first_reply_after = outgoing_count
@@ -90,7 +94,7 @@ def format_email_history(all_emails: list):
             else:
                 content = ''
         
-        message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content, "cc": cc, "bcc": bcc })
+        message_history.append({"role": role, "timestamp": message.get('timestamp_created'), "subject": message.get('subject'),"content": content, "cc": cc, "bcc": bcc, "from_account": last_from_account, "to_account": last_to_account})
     if not lead_reply:
         first_reply_after = 0
     return message_history ,lead_reply, last_timestamp,  from_account, incoming_count, outgoing_count, lead_status, first_reply_after, message_uuid, cc, bcc
@@ -493,16 +497,17 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
 
     # Prepare message data
     for message in messages:
-        if message.get('role') == 'user':
-            from_account = lead_email
-            to_account = account_email
-        else:
-            from_account = account_email
-            to_account = lead_email
+
+        # if message.get('role') == 'user':
+        #     from_account = lead_email
+        #     to_account = account_email
+        # else:
+        #     from_account = account_email
+        #     to_account = lead_email
 
         data.append({
-            "from": from_account,
-            "to": to_account,
+            "from": message.get('from_account'),
+            "to": message.get('to_account'),
             "body": message.get('content'),
             "cc": message.get('cc') or '',
             "bcc": message.get('bcc') or '',
