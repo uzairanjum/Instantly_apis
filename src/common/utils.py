@@ -498,13 +498,6 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
     # Prepare message data
     for message in messages:
 
-        # if message.get('role') == 'user':
-        #     from_account = lead_email
-        #     to_account = account_email
-        # else:
-        #     from_account = account_email
-        #     to_account = lead_email
-
         data.append({
             "from": message.get('from_account'),
             "to": message.get('to_account'),
@@ -545,12 +538,7 @@ def construct_email_text_from_history(messages:list, lead_email:str, account_ema
     data = []
 
     for message in messages:
-        if message.get('role') == 'user':
-            from_account = lead_email
-            to_account = account_email
-        else:
-            from_account = account_email
-            to_account = lead_email
+       
 
         body = message.get('content', '')
         # Remove any HTML/div tags from the body
@@ -561,8 +549,8 @@ def construct_email_text_from_history(messages:list, lead_email:str, account_ema
         body = body.strip()
 
         data.append({
-            "from": from_account,
-            "to": to_account,
+            "from": message.get('from_account'),
+            "to": message.get('to_account'),
             "body": body,
             "cc": message.get('cc') or '',
             "bcc": message.get('bcc') or '',
