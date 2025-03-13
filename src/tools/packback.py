@@ -65,8 +65,8 @@ class PackbackConfig:
         try:
             lead_email =  lead_history.get('email')
             conversation =  data.get('conversation')
-            conversation = validate_lead_conversation(conversation)
-            conversation.pop()
+            # conversation = validate_lead_conversation(conversation)
+            # conversation.pop()
             response = generate_ai_response_for_third_reply (lead_history, conversation, self.open_api_key)
 
 
@@ -137,20 +137,11 @@ class PackbackConfig:
             lead_email =  lead_history.get('email')
             conversation =  data.get('conversation')
 
-            conversation = validate_lead_conversation(conversation)
+            # conversation = validate_lead_conversation(conversation)
 
-            response = None
-
-
-            # if data.get('campaign_id') == 'ecdc673c-3d90-4427-a556-d39c8b69ae9f':
-            #     logger.info("generating ai response")
             response = generate_ai_response (lead_history, conversation, self.open_api_key)
             logger.info("response :: %s", response)
-            # elif data.get('campaign_id') == '6c020a71-af8e-421a-bf8d-b024c491b114':
-            #     logger.info("generating research response")
-            #     response = generate_research_response(lead_history, conversation, self.open_api_key)
-            
-            
+  
             if response is None:
                 return False
 

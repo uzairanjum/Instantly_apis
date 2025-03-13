@@ -38,6 +38,9 @@ def outgoing_sms(data:dict):
 def all_events(data:dict):        
     try:
         logger.info("All events webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
+        if data.get('event_type') == "lead_out_of_office":
+            instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'), 'reply_received')
+
     finally:
         return JSONResponse(content={"status": "success"}, status_code=200)
 
