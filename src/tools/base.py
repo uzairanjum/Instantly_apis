@@ -21,7 +21,7 @@ class BaseConfig:
         self.data = data
 
     def respond_or_forward(self):
-        jc.send_message(f"New interested lead -\n\n Organization - {self.organization_name}\n\nCampaign - {self.campaign_name}\n\nLead Email - {self.data['lead_email']}\n\nConversation URL - {self.data['url']}")
+        # jc.send_message(f"New interested lead -\n\n Organization - {self.organization_name}\n\nCampaign - {self.campaign_name}\n\nLead Email - {self.data['lead_email']}\n\nConversation URL - {self.data['url']}")
     
         if self.organization_name == Client.GEPETO.value:
             logger.info(f"forwarding email for {self.organization_name}")

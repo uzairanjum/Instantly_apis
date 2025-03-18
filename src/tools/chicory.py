@@ -17,6 +17,7 @@ class ChicoryConfig:
     def __init__(self):
         self.to_email = 'seina.shirakura@248.ai'
         # self.cc = 'eug@chicory.ai '
+        self.cc = ''
         self.bcc = 'uzair.anjum@248.ai, mert@248.ai, uzair@248.ai'
 
     def forward_email(self, lead_history, data):

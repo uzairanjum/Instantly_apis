@@ -501,7 +501,7 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
         data.append({
             "from": message.get('from_account'),
             "to": message.get('to_account'),
-            "body": message.get('content'),
+            "body": message.get('content').replace('\n', '<br>'),
             "cc": message.get('cc') or '',
             "bcc": message.get('bcc') or '',
             "date": convert_timestamp_for_email_thread_history(message['timestamp']),
@@ -520,7 +520,7 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
                 <strong>Bcc:</strong> {message['bcc']}
             </div>
             <div style="font-size: 14px; line-height: 1.6; margin-top: 5px; color: black; white-space: pre-wrap;">
-                {message['body'].replace('\n', '<br>')}
+                {re.sub(r'(https?://[^\s<>"]+)', r'<a href="\1">\1</a>', message['body'])}
             </div>
         </div>
         """
