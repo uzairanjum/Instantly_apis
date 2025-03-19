@@ -89,7 +89,7 @@ def generate_ai_response_for_third_reply(lead_history:dict, previous_messages:li
             "content": response,
             "subject": previous_messages[0].get('subject'),
             "cc": lead_ae_manager.get('ae_email'),
-            "bcc": f'{lead_ae_manager.get('manager_email')}, uzair@248.ai, mert@248.ai,uzair.anjum@248.ai',
+            "bcc": f'{lead_ae_manager.get('manager_email')}, uzair@248.ai, mert@248.ai,uzair.anjum@248.ai, seina.shirakura@248.ai',
             "timestamp": previous_messages[-1].get('timestamp')
         }  
     except Exception as e:

@@ -51,6 +51,14 @@ packback_prompt = """
                 "user":"With thanks, I'm not sure how much longer I'll be teaching at Yale before I graduate, so feel free to take me off your list. Best wishes,"
                 "user":"Please take me off your email list.  I've received too many e-mails and I'm not interested in what you're offering. "
                 "user":"not relevant for me-- but thanks.  good luck
+
+                WrongPerson: The lead is not the right person to contact.
+
+                WrongPerson Example messages:
+                "user":"This employee is no longer at the University. "
+                "user":"This account is no longer active at Lanier Technical College and is not checked. "
+                "user":"I'm now at Rice University. You can reach me at my new Rice email address:"
+                "user":"This is NOT your professor's e-mail address. Please use the e-mail address provided on your syllabus."
                                 
                 """
 

@@ -16,7 +16,7 @@ logger = get_logger("Gepeto")
 class GepetoConfig:
     def __init__(self):
         self.to_email = 'mert@248.ai'
-        self.bcc = 'uzair.anjum@248.ai,uzair@248.ai'
+        self.bcc = 'uzair.anjum@248.ai,uzair@248.ai, seina.shirakura@248.ai'
 
     def forward_email(self, lead_history, data):
 

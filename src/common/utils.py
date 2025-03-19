@@ -406,9 +406,10 @@ response_tool = {
                 "NotInterested",
                 "OutOfOffice",
                 "Unsubscribe"
+                "WrongPerson"
               ],
               "type": "string",
-              "description": "Interested if lead is interested, NotInterested if lead is not interested, OutOfOffice if lead is out of office or leaves, Unsubscribe if lead requests to be removed from the contact list"
+              "description": "Interested if lead is interested, NotInterested if lead is not interested, OutOfOffice if lead is out of office or leaves, Unsubscribe if lead requests to be removed from the contact list, WrongPerson if lead is not the right person"
             }
           }
         },
