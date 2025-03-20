@@ -37,6 +37,8 @@ def outgoing_sms(data:dict):
 @instantly_webhook_router.post('/all-events')
 def all_events(data:dict):        
     try:
+        if data.get('event_type') == 'email_sent':
+            return JSONResponse(content={"status": "success"}, status_code=200)
         logger.info("All events webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
         if data.get('event_type') == "lead_out_of_office":
             # logger.info("All events webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
