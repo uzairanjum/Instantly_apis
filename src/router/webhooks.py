@@ -40,7 +40,7 @@ def all_events(data:dict):
         if data.get('event_type') == 'email_sent':
             return JSONResponse(content={"status": "success"}, status_code=200)
         logger.info("All events webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
-        if data.get('event_type') == "lead_out_of_office":
+        if data.get('event_type') in ["lead_out_of_office", "lead_wrong_person", 'auto_reply_received']:
             # logger.info("All events webhook  - %s - %s - %s", data.get('lead_email'), data.get('campaign_id'), data.get('event_type'))
             instantly_queue.enqueue(get_data_from_instantly, data.get('lead_email'), data.get('campaign_id'), 'reply_received')
 
@@ -59,4 +59,3 @@ def test_redis(request:dict):
 
 def test_redis_queue(lead_email):
     logger.info("Redis queue working - %s ", lead_email)
-    
