@@ -51,7 +51,6 @@ class InstantlyAPI:
         url = f'{self.url}/unibox/emails?api_key={self.api_key}&preview_only=false&lead={lead}&campaign_id={campaign_id}&sent_emails=true&email_type=all&latest_of_thread=false'
         try:
             while url:
-                logger.info("url :: %s", url)
                 response = requests.get(url, headers=self.headers)
                 response_json = response.json()
                 all_emails.extend(response_json.get('data', []))

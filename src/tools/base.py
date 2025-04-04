@@ -64,8 +64,13 @@ class BaseConfig:
     def update_salesforce_task(self, updated_data):
         salesforce_client = SalesforceClient(updated_data.get('lead_email'))
         conversation =  updated_data.get('conversation')
-        conversation = construct_email_text_from_history(conversation)
-        salesforce_client.create_update_task(conversation, updated_data.get('status'))
+        try:
+            conversation = construct_email_text_from_history(conversation)
+            salesforce_client.create_update_task(conversation, updated_data.get('status'))
+        except Exception as e:
+            conversation = conversation[:2]
+            conversation = construct_email_text_from_history(conversation)
+            salesforce_client.create_update_task(conversation, updated_data.get('status'))
 
 
 

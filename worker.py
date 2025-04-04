@@ -120,9 +120,16 @@ def update_salesforce_tasks():
                 status = row.get('status').replace(" ", "")
                 from_account = row.get('from_account')
                 conversation = row.get('conversation')
-                conversation = construct_email_text_from_history(conversation, email, from_account)
+                
                 sf = SalesforceClient(email)
-                sf.create_update_task(conversation, status)
+                try:
+                    conversation = construct_email_text_from_history(conversation)
+                    sf.create_update_task(conversation, status)
+                except Exception as e:
+                    conversation = conversation[:2]
+                    conversation = construct_email_text_from_history(conversation)
+                    sf.create_update_task(conversation, status)
+                    logger.error("Error creating update task %s", e)
                 time.sleep(1)
 
     except Exception as e:
@@ -148,31 +155,8 @@ except Exception as e:
 if __name__ == "__main__":
     try:
         logger.info("scheduler is running")
-
-        scheduler.add_job(update_lead_details, 'interval', minutes=10)
-        scheduler.add_job(update_salesforce_tasks, 'interval', minutes=20)
-
-        # # update daily summary report
-        # scheduler.add_job(update_daily_summary_report, 'interval', hours=3)
-
-        # # packback
-        # scheduler.add_job(update_weekly_summary_report, cron_trigger_at_11_tue_pm, args=[1]) 
-
-
-        # old leads dumps into mongodb
-        # scheduler.add_job(restore_leads, 'interval', hours=24)
-
-        # check domain health
-        # scheduler.add_job(update_domain_health_by_mailboxId, cron_trigger_at_09am)
-
-
-        # add mail tester emails to campaign
-        # scheduler.add_job(add_mail_tester_emails_to_campaign, cron_trigger_at_12pm)
-
-
-        # check campaign contacts
-        # scheduler.add_job(check_campaign_contacts, cron_trigger_at_11_pm_daily)
-        
+        scheduler.add_job(update_lead_details, 'interval', minutes=30)
+        scheduler.add_job(update_salesforce_tasks, 'interval', minutes=40)
         scheduler.start()
         worker = Worker([instantly_queue], connection=redis_config.redis)
         worker.work()
@@ -183,8 +167,10 @@ if __name__ == "__main__":
 
 
 # {
-#     "lead_email": "tds99a@acu.edu",
+#     "lead_email": "reginarhymes@aol.com",
 #     "event_type": "reply_received",
 #     "campaign_id": "7df15bbb-4743-4856-a419-dca02803cec7"
 # }
 
+# michelelahaie@gmail.com
+# 7df15bbb-4743-4856-a419-dca02803cec7
