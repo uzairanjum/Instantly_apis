@@ -64,7 +64,7 @@ class BaseConfig:
     def update_salesforce_task(self, updated_data):
         salesforce_client = SalesforceClient(updated_data.get('lead_email'))
         conversation =  updated_data.get('conversation')
-        conversation = construct_email_text_from_history(conversation, updated_data.get('lead_email'), updated_data.get('from_account'))
+        conversation = construct_email_text_from_history(conversation)
         salesforce_client.create_update_task(conversation, updated_data.get('status'))
 
 

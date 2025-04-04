@@ -3,7 +3,7 @@ from src.common.logger import get_logger
 from typing import Union
 from src.common.models import CampaignSummary, TimeFrameCampaignData
 import json
-
+import time
 logger = get_logger("Instantly")
 
 class InstantlyAPI:
@@ -40,8 +40,6 @@ class InstantlyAPI:
             logger.error(f"An error occurred: {e}")
             return None
         
-
-
     def get_all_emails(self, **kwargs):
         """
         Gets all emails details using the Instantly API.
@@ -50,16 +48,17 @@ class InstantlyAPI:
         lead = kwargs.get('lead')
         campaign_id = kwargs.get('campaign_id')
         all_emails = []
-        url = f'{self.url}/unibox/emails?api_key={self.api_key}&preview_only=false&lead={lead}&campaign_id={campaign_id}&sent_emails=true&email_type=all&latest_of_thread=true'
+        url = f'{self.url}/unibox/emails?api_key={self.api_key}&preview_only=false&lead={lead}&campaign_id={campaign_id}&sent_emails=true&email_type=all&latest_of_thread=false'
         try:
             while url:
+                logger.info("url :: %s", url)
                 response = requests.get(url, headers=self.headers)
                 response_json = response.json()
                 all_emails.extend(response_json.get('data', []))
                 page_trail = response_json.get('page_trail')
                 if not page_trail:
                     break
-                url = f'{self.url}/unibox/emails?api_key={self.api_key}&preview_only=false&lead={lead}&campaign_id={campaign_id}&sent_emails=true&email_type=all&latest_of_thread=true&page_trail={page_trail}'
+                url = f'{self.url}/unibox/emails?api_key={self.api_key}&preview_only=false&lead={lead}&campaign_id={campaign_id}&sent_emails=true&email_type=all&latest_of_thread=false&page_trail={page_trail}'
             return all_emails  # Return the aggregated emails
         except requests.exceptions.RequestException as e:
             logger.error(f"An error occurred: {e}")
@@ -78,6 +77,7 @@ class InstantlyAPI:
         url = f"{self.url}/lead/get?api_key={self.api_key}&campaign_id={campaign_id}&email={lead_email}"
         try:
             response = requests.get(url, headers=self.headers)
+            logger.info("response ------>>>:: %s", response)
             if response.status_code == 200:
                 logger.info(f"Lead details retrieved for {lead_email}")
                 return response.json()  # Return the response in JSON format
@@ -150,8 +150,7 @@ class InstantlyAPI:
         except requests.exceptions.RequestException as e:
             logger.error(f"An error occurred: {e}")
             return None
-
-        
+   
     def get_weekly_campaign_details(self, **kwargs) -> Union[TimeFrameCampaignData, None]:
         campaign_id = kwargs.get('campaign_id')
         start_date = kwargs.get('start_date')

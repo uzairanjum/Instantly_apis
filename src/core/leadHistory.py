@@ -24,8 +24,11 @@ class LeadHistory:
         self.instantly = InstantlyAPI(instantly_api_key)
 
     def get_lead_details(self):
+        logger.info("get_lead_details :: %s", self.lead_email)
         lead_details = self.instantly.get_lead_details(lead_email = self.lead_email, campaign_id = self.campaign_id)
+        logger.info("lead details :: %s", lead_details)
         if lead_details:
+            
             lead_details = lead_details[0].get('lead_data')
             return {
                     "email" : lead_details.get('email'), 
@@ -50,6 +53,7 @@ class LeadHistory:
 
     def get_lead_emails(self):
         all_emails = self.instantly.get_all_emails(lead=self.lead_email, campaign_id=self.campaign_id)
+        logger.info("all emails :: %s", all_emails)
         if not all_emails:
             return None 
         return all_emails
@@ -72,6 +76,7 @@ def get_data_from_instantly(lead_email, campaign_id, event, index = 1 , flag = F
         campaign_name, organization_name, instantly_api_key, open_api_key = get_campaign_details(campaign_id)
         if organization_name is None:
             return None
+        logger.info("campaign name :: %s", campaign_name)
         
         instantly_lead = LeadHistory(lead_email, campaign_id, instantly_api_key)
         lead_history = instantly_lead.get_lead_details()

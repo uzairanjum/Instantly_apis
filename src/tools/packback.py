@@ -95,7 +95,7 @@ class PackbackConfig:
             logger.info("email_cc :: %s", email_cc)
             logger.info("email_bcc :: %s", email_bcc)
 
-            email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+            email_body = construct_email_body_from_history(conversation)
 
             merged_email = f"""
             <div>
@@ -176,7 +176,7 @@ class PackbackConfig:
         
 
 
-            email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+            email_body = construct_email_body_from_history(conversation)
 
             merged_email = f"""
             <div>
@@ -241,7 +241,7 @@ class PackbackConfig:
             _, _, instantly_api_key,_ = get_campaign_details(campaign_id)
 
             instantly = InstantlyAPI(instantly_api_key)
-            email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+            email_body = construct_email_body_from_history(conversation)
 
             
 

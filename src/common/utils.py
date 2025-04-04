@@ -490,7 +490,7 @@ def validate_lead_last_reply(message_history: list, open_api_key: str):
     return trueOrFalse(response.get('answer'))
  
 
-def construct_email_body_from_history(messages:list, lead_email:str, account_email:str):
+def construct_email_body_from_history(messages:list):
     html = '<div style="font-family: Arial, sans-serif; color: #202124; max-width: 600px; margin: auto; background-color: #f1f3f4; padding: 20px; border-radius: 8px;">'
     indent_level = len(messages)
 
@@ -535,8 +535,9 @@ def construct_email_body_from_history(messages:list, lead_email:str, account_ema
 
 
 
-def construct_email_text_from_history(messages:list, lead_email:str, account_email:str):
+def construct_email_text_from_history(messages:list):
     data = []
+
 
     for message in messages:
        

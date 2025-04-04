@@ -35,7 +35,7 @@ class GepetoConfig:
 
             instantly = InstantlyAPI(instantly_api_key)
 
-            email_body = construct_email_body_from_history(conversation, lead_email, from_account)
+            email_body = construct_email_body_from_history(conversation)
 
         
             logger.info("sending email to :: %s", lead_email)
