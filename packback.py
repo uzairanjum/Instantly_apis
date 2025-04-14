@@ -1,5 +1,4 @@
 
-from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 import time
 from src.common.logger import get_logger
@@ -8,7 +7,7 @@ from packback_csv import process_csv_with_concurrency
 
 
 
-logger = get_logger('Packback-lead-course')
+logger = get_logger(__name__)
 
 
 
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     try:
         scheduler = BackgroundScheduler()
         logger.info("packback scheduler is running")
-        # scheduler.add_job(packback_lead_course, 'interval', minutes=10)
+        scheduler.add_job(packback_lead_course, 'interval', minutes=10)
         scheduler.start()
         try:
             while True:

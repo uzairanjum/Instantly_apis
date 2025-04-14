@@ -16,8 +16,7 @@ logger = get_logger("Chicory")
 class ChicoryConfig:
     def __init__(self):
         self.to_email = 'haya@chicory.ai'
-        self.cc = 'eug@chicory.ai '
-        self.cc = ''
+        self.cc = 'eug@chicory.ai'
         self.bcc = 'uzair.anjum@248.ai, mert@248.ai, uzair@248.ai, seina.shirakura@248.ai'
 
     def forward_email(self, lead_history, data):
