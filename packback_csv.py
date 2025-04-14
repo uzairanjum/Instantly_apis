@@ -20,7 +20,7 @@ def process_row(row, index):
     lastName = row['Last Name']
     courseCode = row['FA24 Course Code']
     universityName = row['University Name']
-    ae = row['Contact Owner']
+    # ae = row['Contact Owner']
 
 
 
@@ -57,7 +57,7 @@ def process_row(row, index):
                 'promptTokens': prompt_tokens,
                 'completionTokens': completion_tokens,
                 'tokenCost': cost,
-                'ae': ae,
+                # 'ae': ae,
 
             }
         else:
